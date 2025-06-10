@@ -1,11 +1,29 @@
-import "./App.css";
+"use client"
+
+import { BrowserRouter as Router } from "react-router-dom"
+
+import { useAuthStore } from "./store/authStore"
+import { useEffect } from "react"
+import { onAuthStateChanged } from "./api/authService"
+import AppRoutes from "./routers"
 
 function App() {
+  const { setUser, setLoading } = useAuthStore()
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged((user) => {
+      setUser(user)
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [setUser, setLoading])
+
   return (
-    <>
-      <div>hello</div>
-    </>
-  );
+    <Router>
+      <AppRoutes />
+    </Router>
+  )
 }
 
-export default App;
+export default App
