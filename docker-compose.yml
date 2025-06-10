@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  # Định nghĩa service cho ứng dụng frontend
+  app:
+    # Tên của container khi chạy
+    container_name: my-expense-app
+    
+    # Cấu hình build image
+    build:
+      # Build từ thư mục hiện tại
+      context: .
+      # Sử dụng file Dockerfile đã tạo
+      dockerfile: Dockerfile
+      
+    # Ánh xạ cổng: cổng 3000 trên máy của bạn sẽ được nối với cổng 80 trong container
+    ports:
+      - "3000:80"
+      
+    # Tự động khởi động lại container nếu nó bị dừng (trừ khi bạn tự tay stop)
+    restart: unless-stopped
+
+    # (Tùy chọn) Nếu ứng dụng cần biến môi trường, bạn có thể thêm vào đây
+    # env_file:
+    #   - .env

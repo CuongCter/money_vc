@@ -1,0 +1,16 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+build
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Misc
+.git
+.env
+*.log
