@@ -1,5 +1,4 @@
-"use client"
-
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../../store/authStore"
 import { logout } from "../../api/authService"
@@ -8,11 +7,16 @@ import { Menu, Bell, User, LogOut, Search } from "lucide-react"
 const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate()
   const { user, logout: logoutStore } = useAuthStore()
+  const [showDropdown, setShowDropdown] = useState(false)
 
   const handleLogout = async () => {
     await logout()
     logoutStore()
     navigate("/login")
+  }
+
+  const toggleDropdown = () => {
+    setShowDropdown(prev => !prev)
   }
 
   return (
@@ -44,14 +48,17 @@ const Navbar = ({ onMenuClick }) => {
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center relative">
           <button className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none">
             <Bell size={20} />
           </button>
 
           <div className="ml-3 relative">
             <div className="flex items-center">
-              <button className="flex items-center gap-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+              <button
+                onClick={toggleDropdown}
+                className="flex items-center gap-2 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
                 <span className="hidden md:block text-sm font-medium text-gray-700">{user?.email || "User"}</span>
                 <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
                   <User size={16} />
@@ -59,15 +66,17 @@ const Navbar = ({ onMenuClick }) => {
               </button>
             </div>
 
-            <div className="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-              >
-                <LogOut size={16} />
-                Sign out
-              </button>
-            </div>
+            {showDropdown && (
+              <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                >
+                  <LogOut size={16} />
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

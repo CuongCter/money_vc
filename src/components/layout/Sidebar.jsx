@@ -26,7 +26,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
-            <span className="text-xl font-semibold text-primary-600">ExpenseTracker</span>
+            <span className="text-xl font-bold text-primary-600">ExpenseTracker</span>
           </div>
           <button
             onClick={() => setIsOpen(false)}
@@ -42,9 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               key={item.name}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-colors ${
-                  isActive ? "bg-primary-50 text-primary-700" : "text-gray-700 hover:bg-gray-100"
-                }`
+                `sidebar-nav-item ${isActive ? "sidebar-nav-item-active" : "sidebar-nav-item-inactive"}`
               }
             >
               <item.icon className="w-5 h-5 mr-3" />
