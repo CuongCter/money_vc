@@ -1,0 +1,60 @@
+"use client"
+
+import { NavLink } from "react-router-dom"
+import { Home, CreditCard, BarChart2, Settings, X } from "lucide-react"
+
+const Sidebar = ({ isOpen, setIsOpen }) => {
+  const navItems = [
+    { name: "Dashboard", path: "/", icon: Home },
+    { name: "Transactions", path: "/transactions", icon: CreditCard },
+    { name: "Reports", path: "/reports", icon: BarChart2 },
+    { name: "Settings", path: "/settings", icon: Settings },
+  ]
+
+  return (
+    <>
+      {/* Mobile sidebar backdrop */}
+      {isOpen && (
+        <div className="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden" onClick={() => setIsOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+          <div className="flex items-center">
+            <span className="text-xl font-semibold text-primary-600">ExpenseTracker</span>
+          </div>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none lg:hidden"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center px-4 py-2.5 text-sm font-medium rounded-md transition-colors ${
+                  isActive ? "bg-primary-50 text-primary-700" : "text-gray-700 hover:bg-gray-100"
+                }`
+              }
+            >
+              <item.icon className="w-5 h-5 mr-3" />
+              {item.name}
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+    </>
+  )
+}
+
+export default Sidebar
