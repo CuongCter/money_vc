@@ -7,14 +7,21 @@ export const useTransactionStore = create((set, get) => ({
   filters: {
     startDate: null,
     endDate: null,
-    category: null,
+    categoryId: null,
     type: null, // 'income' or 'expense'
+  },
+  stats: {
+    totalIncome: 0,
+    totalExpense: 0,
+    balance: 0,
+    expensesByCategory: {},
   },
 
   // Actions
   setTransactions: (transactions) => set({ transactions }),
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
+  setStats: (stats) => set({ stats }),
 
   // Filter actions
   setFilters: (filters) => set({ filters: { ...get().filters, ...filters } }),
@@ -23,7 +30,7 @@ export const useTransactionStore = create((set, get) => ({
       filters: {
         startDate: null,
         endDate: null,
-        category: null,
+        categoryId: null,
         type: null,
       },
     }),
@@ -31,7 +38,7 @@ export const useTransactionStore = create((set, get) => ({
   // Transaction actions
   addTransaction: (transaction) =>
     set({
-      transactions: [...get().transactions, transaction],
+      transactions: [transaction, ...get().transactions],
     }),
 
   updateTransaction: (id, updatedTransaction) =>
@@ -75,7 +82,7 @@ export const useTransactionStore = create((set, get) => ({
         return false
       }
       // Apply category filter
-      if (filters.category && transaction.category !== filters.category) {
+      if (filters.categoryId && transaction.categoryId !== filters.categoryId) {
         return false
       }
       // Apply type filter
@@ -84,5 +91,24 @@ export const useTransactionStore = create((set, get) => ({
       }
       return true
     })
+  },
+
+  // Get transactions grouped by category
+  getTransactionsByCategory: (type = "expense") => {
+    const transactions = get().transactions.filter((t) => t.type === type)
+
+    return transactions.reduce((acc, transaction) => {
+      if (!acc[transaction.categoryId]) {
+        acc[transaction.categoryId] = {
+          total: 0,
+          transactions: [],
+        }
+      }
+
+      acc[transaction.categoryId].total += transaction.amount
+      acc[transaction.categoryId].transactions.push(transaction)
+
+      return acc
+    }, {})
   },
 }))
