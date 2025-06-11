@@ -29,31 +29,16 @@ const GoogleIcon = () => (
 const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className = "" }) => {
   const [isLoading, setIsLoading] = useState(false)
 
-  // Test Firebase connection on component mount
-  useEffect(() => {
-    testFirebaseConnection()
-  }, [])
 
   const handleGoogleSignIn = async () => {
     console.log("=== Google Sign-In Button Clicked ===")
     setIsLoading(true)
 
     try {
-      // Test Firebase connection first
-      const connectionOk = await testFirebaseConnection()
-      if (!connectionOk) {
-        throw new Error("Firebase connection failed")
-      }
+    
 
-      // Try popup method first
-      console.log("Attempting Google sign-in...")
       const result = await signInWithGoogle()
 
-      console.log("=== Google Sign-In Button Result ===")
-      console.log("Full result:", result)
-      console.log("User:", result.user)
-      console.log("Error:", result.error)
-      console.log("Is new user:", result.isNewUser)
 
       const { user, error, isNewUser } = result
 
@@ -89,10 +74,7 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
         }
       }
     } catch (err) {
-      console.error("=== Unexpected Google Sign-In Error ===")
-      console.error("Error object:", err)
-      console.error("Error message:", err.message)
-      console.error("Error stack:", err.stack)
+  
 
       const errorMsg = `Lỗi không mong muốn: ${err.message}`
       if (onError) {
