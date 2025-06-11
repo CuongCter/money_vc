@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
+import { useNotificationStore } from "../store/notificationStore"
 import { login, getGoogleRedirectResult } from "../api/authService"
 import Input from "../components/ui/Input"
 import Button from "../components/ui/Button"
@@ -18,6 +19,7 @@ const LoginPage = () => {
 
   const navigate = useNavigate()
   const { setUser } = useAuthStore()
+  const { showSuccess, showError } = useNotificationStore()
 
   // Check for Google redirect result on component mount
   useEffect(() => {
@@ -27,19 +29,24 @@ const LoginPage = () => {
 
         if (user) {
           setUser(user)
+          showSuccess(
+            isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
+            `Chào mừng ${user.displayName || user.email}!`,
+          )
           navigate("/")
         } else if (error) {
           setError(error)
+          showError(error)
         }
       } catch (err) {
-        console.error("Redirect result error:", err)
+        showError("Đã xảy ra lỗi khi kiểm tra trạng thái đăng nhập")
       } finally {
         setIsCheckingRedirect(false)
       }
     }
 
     checkRedirectResult()
-  }, [setUser, navigate])
+  }, [setUser, navigate, showSuccess, showError])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -51,26 +58,37 @@ const LoginPage = () => {
 
       if (error) {
         setError(error)
+        showError(error)
         return
       }
 
-      setUser(user)
-      navigate("/")
+      if (user) {
+        setUser(user)
+        showSuccess("Đăng nhập thành công!", `Chào mừng ${user.displayName || user.email}!`)
+        navigate("/")
+      }
     } catch (err) {
-      setError("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.")
-      console.error(err)
+      const errorMsg = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+      setError(errorMsg)
+      showError(errorMsg)
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleGoogleSuccess = (user, isNewUser) => {
+    setError("") // Clear any existing errors
     setUser(user)
+    showSuccess(
+      isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
+      `Chào mừng ${user.displayName || user.email}!`,
+    )
     navigate("/")
   }
 
   const handleGoogleError = (error) => {
     setError(error)
+    showError(error)
   }
 
   // Show loading spinner while checking redirect result
@@ -109,7 +127,11 @@ const LoginPage = () => {
         </div>
 
         <div className="mt-8 space-y-6">
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">{error}</div>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
 
           {/* Google Sign In Button */}
           <div>

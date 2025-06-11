@@ -3,12 +3,14 @@
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../../store/authStore"
+import { useNotificationStore } from "../../store/notificationStore"
 import { logout } from "../../api/authService"
 import { Menu, Bell, User, LogOut, Search } from "lucide-react"
 
 const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate()
   const { user, logout: logoutStore } = useAuthStore()
+  const { showSuccess, showError } = useNotificationStore()
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -16,9 +18,10 @@ const Navbar = ({ onMenuClick }) => {
     try {
       await logout()
       logoutStore()
+      showSuccess("Đăng xuất thành công!", "Hẹn gặp lại bạn!")
       navigate("/login")
     } catch (error) {
-      console.error("Logout error:", error)
+      showError("Đã xảy ra lỗi khi đăng xuất")
     }
   }
 

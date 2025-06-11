@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { signInWithGoogle, signInWithGoogleRedirect, testFirebaseConnection } from "../../api/authService"
+import { useState } from "react"
+import { signInWithGoogle, signInWithGoogleRedirect } from "../../api/authService"
 import Button from "./Button"
 import LoadingSpinner from "./LoadingSpinner"
 
@@ -29,25 +29,17 @@ const GoogleIcon = () => (
 const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className = "" }) => {
   const [isLoading, setIsLoading] = useState(false)
 
-
   const handleGoogleSignIn = async () => {
-    console.log("=== Google Sign-In Button Clicked ===")
     setIsLoading(true)
 
     try {
-    
-
+      // Try popup method first
       const result = await signInWithGoogle()
-
-
       const { user, error, isNewUser } = result
 
       if (error) {
-        console.error("Google sign-in error from service:", error)
-
         // If popup is blocked, try redirect method
         if (error.includes("popup") || error.includes("Popup") || error.includes("chặn")) {
-          console.log("Popup blocked, trying redirect method...")
           const redirectResult = await signInWithGoogleRedirect()
           if (redirectResult.isRedirect) {
             // Redirect is happening, no need to handle here
@@ -62,20 +54,15 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
       }
 
       if (user) {
-        console.log("Google sign-in successful, calling onSuccess callback")
         if (onSuccess) {
           onSuccess(user, isNewUser)
         }
       } else {
-        console.error("No user returned from Google sign-in service")
-        const errorMsg = "Không nhận được thông tin người dùng từ Google"
         if (onError) {
-          onError(errorMsg)
+          onError("Không nhận được thông tin người dùng từ Google")
         }
       }
     } catch (err) {
-  
-
       const errorMsg = `Lỗi không mong muốn: ${err.message}`
       if (onError) {
         onError(errorMsg)

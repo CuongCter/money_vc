@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../../store/authStore"
 import { useTransactionStore } from "../../store/transactionStore"
 import { useCategoryStore } from "../../store/categoryStore"
+import { useNotificationStore } from "../../store/notificationStore"
 import { addTransaction, updateTransaction } from "../../api/transactionService"
 import Button from "../ui/Button"
 import Input from "../ui/Input"
@@ -14,6 +15,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
   const { user } = useAuthStore()
   const { addTransaction: addToStore, updateTransaction: updateInStore } = useTransactionStore()
   const { categories } = useCategoryStore()
+  const { showSuccess, showError } = useNotificationStore()
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
@@ -53,17 +55,23 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
 
     // Validate form
     if (!formData.description.trim()) {
-      setError("Vui lòng nhập mô tả")
+      const errorMsg = "Vui lòng nhập mô tả"
+      setError(errorMsg)
+      showError(errorMsg)
       return
     }
 
     if (!formData.amount || isNaN(formData.amount) || Number.parseFloat(formData.amount) <= 0) {
-      setError("Vui lòng nhập số tiền hợp lệ")
+      const errorMsg = "Vui lòng nhập số tiền hợp lệ"
+      setError(errorMsg)
+      showError(errorMsg)
       return
     }
 
     if (!formData.categoryId) {
-      setError("Vui lòng chọn danh mục")
+      const errorMsg = "Vui lòng chọn danh mục"
+      setError(errorMsg)
+      showError(errorMsg)
       return
     }
 
@@ -82,22 +90,26 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
 
         if (error) {
           setError(error)
+          showError(error)
           return
         }
 
         // Update in local store
         updateInStore(transaction.id, transactionData)
+        showSuccess("Giao dịch đã được cập nhật thành công!")
       } else {
         // Add new transaction
         const { id, error } = await addTransaction(transactionData, user.uid)
 
         if (error) {
           setError(error)
+          showError(error)
           return
         }
 
         // Add to local store
         addToStore({ id, ...transactionData })
+        showSuccess("Giao dịch đã được thêm thành công!")
       }
 
       // Call success callback or navigate
@@ -107,8 +119,9 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
         navigate("/transactions")
       }
     } catch (err) {
-      setError("Đã xảy ra lỗi. Vui lòng thử lại.")
-      console.error(err)
+      const errorMsg = "Đã xảy ra lỗi. Vui lòng thử lại."
+      setError(errorMsg)
+      showError(errorMsg)
     } finally {
       setIsLoading(false)
     }

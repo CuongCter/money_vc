@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTransactionStore } from "../../store/transactionStore"
 import { useCategoryStore } from "../../store/categoryStore"
+import { useNotificationStore } from "../../store/notificationStore"
 import { deleteTransaction } from "../../api/transactionService"
 import { ArrowUpRight, ArrowDownRight, Edit, Trash2 } from "lucide-react"
 import Button from "../ui/Button"
@@ -14,6 +15,7 @@ const TransactionList = ({ transactions = [], showActions = true }) => {
   const navigate = useNavigate()
   const { deleteTransaction: removeTransaction } = useTransactionStore()
   const { getCategoryById } = useCategoryStore()
+  const { showSuccess, showError } = useNotificationStore()
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async (id) => {
@@ -23,6 +25,9 @@ const TransactionList = ({ transactions = [], showActions = true }) => {
 
       if (!error) {
         removeTransaction(id)
+        showSuccess("Giao dịch đã được xóa thành công!")
+      } else {
+        showError("Đã xảy ra lỗi khi xóa giao dịch")
       }
       setIsDeleting(false)
     }

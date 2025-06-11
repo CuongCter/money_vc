@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
+import { useNotificationStore } from "../store/notificationStore"
 import { register, getGoogleRedirectResult } from "../api/authService"
 import Input from "../components/ui/Input"
 import Button from "../components/ui/Button"
@@ -22,6 +23,7 @@ const RegisterPage = () => {
 
   const navigate = useNavigate()
   const { setUser } = useAuthStore()
+  const { showSuccess, showError } = useNotificationStore()
 
   // Check for Google redirect result on component mount
   useEffect(() => {
@@ -31,19 +33,24 @@ const RegisterPage = () => {
 
         if (user) {
           setUser(user)
+          showSuccess(
+            isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
+            `Chào mừng ${user.displayName || user.email}!`,
+          )
           navigate("/")
         } else if (error) {
           setError(error)
+          showError(error)
         }
       } catch (err) {
-        console.error("Redirect result error:", err)
+        showError("Đã xảy ra lỗi khi kiểm tra trạng thái đăng nhập")
       } finally {
         setIsCheckingRedirect(false)
       }
     }
 
     checkRedirectResult()
-  }, [setUser, navigate])
+  }, [setUser, navigate, showSuccess, showError])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -56,19 +63,25 @@ const RegisterPage = () => {
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp")
+      const errorMsg = "Mật khẩu xác nhận không khớp"
+      setError(errorMsg)
+      showError(errorMsg)
       return
     }
 
     // Validate password strength
     if (formData.password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự")
+      const errorMsg = "Mật khẩu phải có ít nhất 6 ký tự"
+      setError(errorMsg)
+      showError(errorMsg)
       return
     }
 
     // Validate display name
     if (!formData.displayName.trim()) {
-      setError("Vui lòng nhập tên hiển thị")
+      const errorMsg = "Vui lòng nhập tên hiển thị"
+      setError(errorMsg)
+      showError(errorMsg)
       return
     }
 
@@ -79,14 +92,17 @@ const RegisterPage = () => {
 
       if (error) {
         setError(error)
+        showError(error)
         return
       }
 
       setUser(user)
+      showSuccess("Tài khoản đã được tạo thành công!", `Chào mừng ${user.displayName}!`)
       navigate("/")
     } catch (err) {
-      setError("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.")
-      console.error(err)
+      const errorMsg = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+      setError(errorMsg)
+      showError(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -94,11 +110,16 @@ const RegisterPage = () => {
 
   const handleGoogleSuccess = (user, isNewUser) => {
     setUser(user)
+    showSuccess(
+      isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
+      `Chào mừng ${user.displayName || user.email}!`,
+    )
     navigate("/")
   }
 
   const handleGoogleError = (error) => {
     setError(error)
+    showError(error)
   }
 
   // Show loading spinner while checking redirect result
