@@ -1,20 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
-import { login } from "../api/authService"
+import { login, getGoogleRedirectResult } from "../api/authService"
 import Input from "../components/ui/Input"
 import Button from "../components/ui/Button"
+import GoogleSignInButton from "../components/ui/GoogleSignInButton"
+import LoadingSpinner from "../components/ui/LoadingSpinner"
 
 const LoginPage = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true)
 
   const navigate = useNavigate()
   const { setUser } = useAuthStore()
+
+  // Check for Google redirect result on component mount
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      try {
+        const { user, error, isNewUser } = await getGoogleRedirectResult()
+
+        if (user) {
+          setUser(user)
+          navigate("/")
+        } else if (error) {
+          setError(error)
+        }
+      } catch (err) {
+        console.error("Redirect result error:", err)
+      } finally {
+        setIsCheckingRedirect(false)
+      }
+    }
+
+    checkRedirectResult()
+  }, [setUser, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -32,79 +57,130 @@ const LoginPage = () => {
       setUser(user)
       navigate("/")
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.")
+      setError("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.")
       console.error(err)
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleGoogleSuccess = (user, isNewUser) => {
+    setUser(user)
+    navigate("/")
+  }
+
+  const handleGoogleError = (error) => {
+    setError(error)
+  }
+
+  // Show loading spinner while checking redirect result
+  if (isCheckingRedirect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Đang kiểm tra trạng thái đăng nhập...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
+            <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Đăng nhập vào tài khoản</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
-              create a new account
+            Hoặc{" "}
+            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
+              tạo tài khoản mới
             </Link>
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <div className="mt-8 space-y-6">
           {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">{error}</div>}
 
-          <div className="space-y-4">
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              label="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              label="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a href="#" className="font-medium text-primary-600 hover:text-primary-500">
-                Forgot your password?
-              </a>
-            </div>
-          </div>
-
+          {/* Google Sign In Button */}
           <div>
-            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
-            </Button>
+            <GoogleSignInButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} variant="outline" />
           </div>
-        </form>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-50 text-gray-500">Hoặc đăng nhập bằng email</span>
+            </div>
+          </div>
+
+          {/* Email/Password Form */}
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                label="Địa chỉ email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Nhập email của bạn"
+              />
+
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                label="Mật khẩu"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Nhập mật khẩu"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                  Ghi nhớ đăng nhập
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                  Quên mật khẩu?
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
