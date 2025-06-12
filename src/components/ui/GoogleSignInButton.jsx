@@ -33,33 +33,50 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
     setIsLoading(true)
 
     try {
-      // Try popup method first
-      const result = await signInWithGoogle()
-      const { user, error, isNewUser } = result
+      // Check if we're in production and use redirect method for better compatibility
+      const isProduction = window.location.hostname !== "localhost"
 
-      if (error) {
-        // If popup is blocked, try redirect method
-        if (error.includes("popup") || error.includes("Popup") || error.includes("chặn")) {
-          const redirectResult = await signInWithGoogleRedirect()
-          if (redirectResult.isRedirect) {
-            // Redirect is happening, no need to handle here
-            return
+      if (isProduction) {
+        // Use redirect method for production (Vercel)
+        const redirectResult = await signInWithGoogleRedirect()
+        if (redirectResult.isRedirect) {
+          // Redirect is happening, component will unmount
+          return
+        }
+        if (redirectResult.error) {
+          if (onError) {
+            onError(redirectResult.error)
           }
-        }
-
-        if (onError) {
-          onError(error)
-        }
-        return
-      }
-
-      if (user) {
-        if (onSuccess) {
-          onSuccess(user, isNewUser)
+          return
         }
       } else {
-        if (onError) {
-          onError("Không nhận được thông tin người dùng từ Google")
+        // Use popup method for development
+        const result = await signInWithGoogle()
+        const { user, error, isNewUser } = result
+
+        if (error) {
+          // If popup fails, try redirect as fallback
+          if (error.includes("popup") || error.includes("Popup") || error.includes("chặn")) {
+            const redirectResult = await signInWithGoogleRedirect()
+            if (redirectResult.isRedirect) {
+              return
+            }
+          }
+
+          if (onError) {
+            onError(error)
+          }
+          return
+        }
+
+        if (user) {
+          if (onSuccess) {
+            onSuccess(user, isNewUser)
+          }
+        } else {
+          if (onError) {
+            onError("Không nhận được thông tin người dùng từ Google")
+          }
         }
       }
     } catch (err) {
