@@ -9,28 +9,78 @@ import TransactionsPage from "../pages/TransactionsPage"
 import AddTransactionPage from "../pages/AddTransactionPage"
 import ReportsPage from "../pages/ReportsPage"
 import SettingsPage from "../pages/SettingsPage"
+import LoadingSpinner from "../components/ui/LoadingSpinner"
 
-// Protected route component
+// Protected route component with better debugging
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore()
 
+  // Show loading spinner while checking auth state
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Đang kiểm tra trạng thái đăng nhập...</p>
+        </div>
+      </div>
+    )
   }
 
+  // If no user, redirect to login
   if (!user) {
     return <Navigate to="/login" replace />
   }
 
+  // User is authenticated, render children
+  return children
+}
+
+// Public route component (redirect to dashboard if already logged in)
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuthStore()
+
+  // Show loading spinner while checking auth state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">Đang kiểm tra trạng thái đăng nhập...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If user is already logged in, redirect to dashboard
+  if (user) {
+    return <Navigate to="/" replace />
+  }
+
+  // User is not logged in, show public page
   return children
 }
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      {/* Public routes - redirect to dashboard if already logged in */}
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <RegisterPage />
+          </PublicRoute>
+        }
+      />
 
       {/* Protected routes */}
       <Route

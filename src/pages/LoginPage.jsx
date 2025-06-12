@@ -18,8 +18,15 @@ const LoginPage = () => {
   const [isCheckingRedirect, setIsCheckingRedirect] = useState(true)
 
   const navigate = useNavigate()
-  const { setUser } = useAuthStore()
+  const { setUser, user } = useAuthStore()
   const { showSuccess, showError } = useNotificationStore()
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/", { replace: true })
+    }
+  }, [user, navigate])
 
   // Check for Google redirect result on component mount
   useEffect(() => {
@@ -33,7 +40,7 @@ const LoginPage = () => {
             isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
             `Chào mừng ${user.displayName || user.email}!`,
           )
-          navigate("/")
+          navigate("/", { replace: true })
         } else if (error) {
           setError(error)
           showError(error)
@@ -65,7 +72,7 @@ const LoginPage = () => {
       if (user) {
         setUser(user)
         showSuccess("Đăng nhập thành công!", `Chào mừng ${user.displayName || user.email}!`)
-        navigate("/")
+        navigate("/", { replace: true })
       }
     } catch (err) {
       const errorMsg = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
@@ -83,7 +90,7 @@ const LoginPage = () => {
       isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
       `Chào mừng ${user.displayName || user.email}!`,
     )
-    navigate("/")
+    navigate("/", { replace: true })
   }
 
   const handleGoogleError = (error) => {

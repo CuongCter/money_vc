@@ -11,14 +11,23 @@ import NotificationContainer from "./components/ui/Notification";
 function App() {
   const { setUser, setLoading } = useAuthStore();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged((user) => {
-      setUser(user);
-      setLoading(false);
-    });
+ useEffect(() => {
+    // Set initial loading state
+    setLoading(true)
 
-    return () => unsubscribe();
-  }, [setUser, setLoading]);
+    const unsubscribe = onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in
+        setUser(user)
+      } else {
+        // User is signed out
+        setUser(null)
+      }
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [setUser, setLoading])
 
   return (
     <Router>
