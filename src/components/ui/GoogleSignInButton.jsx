@@ -35,14 +35,10 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
     setIsLoading(true)
 
     try {
-      console.log("Starting Google Sign-In process with popup...")
-
-      // Luôn sử dụng phương thức popup cho cả local và production
       const result = await signInWithGoogle()
       const { user, error, isNewUser } = result
 
       if (error) {
-        console.error("Google popup error:", error)
         if (onError) {
           onError(error)
         }
@@ -52,13 +48,11 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
       }
 
       if (user) {
-        console.log("Google sign-in successful:", user.email)
         if (onSuccess) {
           onSuccess(user, isNewUser)
         }
       } else {
         const errorMsg = "Không nhận được thông tin người dùng từ Google"
-        console.error(errorMsg)
         if (onError) {
           onError(errorMsg)
         }
@@ -66,7 +60,6 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
       }
     } catch (err) {
       const errorMsg = `Lỗi không mong muốn: ${err.message}`
-      console.error("Unexpected error:", err)
       if (onError) {
         onError(errorMsg)
       }

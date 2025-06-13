@@ -16,13 +16,9 @@ import { auth, db } from "../config/firebase"
 export { auth }
 
 // Set persistence to LOCAL (survive browser restart)
-setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-    console.log("Firebase persistence set to LOCAL")
-  })
-  .catch((error) => {
-    console.error("Error setting persistence:", error)
-  })
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error("Error setting persistence:", error)
+})
 
 // Configure Google Auth Provider with production-friendly settings
 const createGoogleProvider = () => {
@@ -64,7 +60,6 @@ export const register = async (email, password, displayName) => {
 
     return { user, error: null, isNewUser: true }
   } catch (error) {
-    console.error("Registration error:", error)
     return { user: null, error: getErrorMessage(error.code), isNewUser: false }
   }
 }
@@ -80,7 +75,6 @@ export const login = async (email, password) => {
 
     return { user, error: null }
   } catch (error) {
-    console.error("Login error:", error)
     return { user: null, error: getErrorMessage(error.code) }
   }
 }
@@ -88,12 +82,9 @@ export const login = async (email, password) => {
 // Sign in with Google (Popup method - for all environments)
 export const signInWithGoogle = async () => {
   try {
-    console.log("Starting Google sign in with popup...")
     const googleProvider = createGoogleProvider()
     const userCredential = await signInWithPopup(auth, googleProvider)
     const user = userCredential.user
-
-    console.log("Google sign in successful:", user.email)
 
     if (!user) {
       return { user: null, error: "Không nhận được thông tin người dùng từ Google" }
@@ -129,8 +120,6 @@ export const signInWithGoogle = async () => {
 
     return { user, error: null, isNewUser }
   } catch (error) {
-    console.error("Google sign in error:", error)
-
     // Handle specific Google sign-in errors
     if (error.code === "auth/popup-closed-by-user") {
       return { user: null, error: "Đăng nhập bị hủy bởi người dùng" }
@@ -179,9 +168,7 @@ export const logout = async () => {
 
 // Auth state observer
 export const onAuthStateChanged = (callback) => {
-  console.log("Setting up auth state listener")
   return firebaseAuthStateChanged(auth, (user) => {
-    console.log("Auth state changed:", user ? `User: ${user.email}` : "No user")
     callback(user)
   })
 }
