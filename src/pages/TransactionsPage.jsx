@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useTransactionStore } from "../store/transactionStore"
 import { useAuthStore } from "../store/authStore"
+import { useLanguageStore } from "../store/languageStore"
 import { getTransactions, deleteTransaction } from "../api/firestoreService"
 import { Plus, Filter, ArrowUpRight, ArrowDownRight, Edit, Trash2 } from "lucide-react"
 import Button from "../components/ui/Button"
@@ -10,8 +11,9 @@ import { useNavigate } from "react-router-dom"
 
 const TransactionsPage = () => {
   const { user } = useAuthStore()
+  const { t } = useLanguageStore()
   const {
-    // transactions,
+    transactions,
     setTransactions,
     setLoading,
     isLoading,
@@ -42,7 +44,7 @@ const TransactionsPage = () => {
   }, [user, setLoading, setTransactions])
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this transaction?")) {
+    if (window.confirm(t("transactions.confirmDelete"))) {
       const { error } = await deleteTransaction(id)
 
       if (!error) {
@@ -56,15 +58,15 @@ const TransactionsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Transactions</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("transactions.transactions")}</h1>
         <div className="flex space-x-2">
           <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
             <Filter size={16} className="mr-2" />
-            Filters
+            {t("common.filter")}
           </Button>
           <Button onClick={() => navigate("/transactions/add")}>
             <Plus size={16} className="mr-2" />
-            Add Transaction
+            {t("transactions.addTransaction")}
           </Button>
         </div>
       </div>
@@ -74,7 +76,7 @@ const TransactionsPage = () => {
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("transactions.startDate")}</label>
               <input
                 type="date"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -83,7 +85,7 @@ const TransactionsPage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("transactions.endDate")}</label>
               <input
                 type="date"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -92,13 +94,13 @@ const TransactionsPage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("transactions.category")}</label>
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 value={filters.category || ""}
                 onChange={(e) => setFilters({ category: e.target.value })}
               >
-                <option value="">All Categories</option>
+                <option value="">{t("transactions.allCategories")}</option>
                 <option value="Food">Food</option>
                 <option value="Transportation">Transportation</option>
                 <option value="Housing">Housing</option>
@@ -109,24 +111,24 @@ const TransactionsPage = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("transactions.type")}</label>
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 value={filters.type || ""}
                 onChange={(e) => setFilters({ type: e.target.value })}
               >
-                <option value="">All Types</option>
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
+                <option value="">{t("transactions.allTypes")}</option>
+                <option value="income">{t("transactions.income")}</option>
+                <option value="expense">{t("transactions.expense")}</option>
               </select>
             </div>
           </div>
           <div className="mt-4 flex justify-end">
             <Button variant="outline" size="sm" className="mr-2" onClick={resetFilters}>
-              Reset
+              {t("common.reset")}
             </Button>
             <Button size="sm" onClick={() => setShowFilters(false)}>
-              Apply
+              {t("common.apply")}
             </Button>
           </div>
         </div>
@@ -142,37 +144,37 @@ const TransactionsPage = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Date
+                  {t("transactions.date")}
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Description
+                  {t("transactions.description")}
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Category
+                  {t("transactions.category")}
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Type
+                  {t("transactions.type")}
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Amount
+                  {t("transactions.amount")}
                 </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Actions
+                  {t("transactions.actions")}
                 </th>
               </tr>
             </thead>
@@ -180,7 +182,7 @@ const TransactionsPage = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan="6" className="px-6 py-4 text-center">
-                    Loading transactions...
+                    {t("common.loading")}
                   </td>
                 </tr>
               ) : filteredTransactions.length > 0 ? (
@@ -204,7 +206,7 @@ const TransactionsPage = () => {
                         ) : (
                           <ArrowDownRight size={12} className="mr-1" />
                         )}
-                        {transaction.type === "income" ? "Income" : "Expense"}
+                        {transaction.type === "income" ? t("transactions.income") : t("transactions.expense")}
                       </span>
                     </td>
                     <td
@@ -230,7 +232,7 @@ const TransactionsPage = () => {
               ) : (
                 <tr>
                   <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                    No transactions found. Add your first transaction!
+                    {t("transactions.noTransactions")}
                   </td>
                 </tr>
               )}

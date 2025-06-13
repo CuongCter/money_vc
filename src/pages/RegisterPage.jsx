@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
 import { useNotificationStore } from "../store/notificationStore"
+import { useLanguageStore } from "../store/languageStore"
 import { register } from "../api/authService"
 import Input from "../components/ui/Input"
 import Button from "../components/ui/Button"
@@ -23,6 +24,7 @@ const RegisterPage = () => {
   const location = useLocation()
   const { setUser, user, isInitialized } = useAuthStore()
   const { showSuccess, showError } = useNotificationStore()
+  const { t } = useLanguageStore()
 
   // Get the intended destination from location state
   const from = location.state?.from?.pathname || "/"
@@ -45,7 +47,7 @@ const RegisterPage = () => {
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      const errorMsg = "Mật khẩu xác nhận không khớp"
+      const errorMsg = t("errors.passwordMismatch")
       setError(errorMsg)
       showError(errorMsg)
       return
@@ -53,7 +55,7 @@ const RegisterPage = () => {
 
     // Validate password strength
     if (formData.password.length < 6) {
-      const errorMsg = "Mật khẩu phải có ít nhất 6 ký tự"
+      const errorMsg = t("errors.weakPassword")
       setError(errorMsg)
       showError(errorMsg)
       return
@@ -61,7 +63,7 @@ const RegisterPage = () => {
 
     // Validate display name
     if (!formData.displayName.trim()) {
-      const errorMsg = "Vui lòng nhập tên hiển thị"
+      const errorMsg = t("errors.required")
       setError(errorMsg)
       showError(errorMsg)
       return
@@ -79,10 +81,10 @@ const RegisterPage = () => {
       }
 
       setUser(user)
-      showSuccess("Tài khoản đã được tạo thành công!", `Chào mừng ${user.displayName}!`)
+      showSuccess(t("success.registerSuccess"), `${t("success.welcome")} ${user.displayName}!`)
       navigate(from, { replace: true })
     } catch (err) {
-      const errorMsg = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+      const errorMsg = t("errors.unexpectedError")
       setError(errorMsg)
       showError(errorMsg)
     } finally {
@@ -93,8 +95,8 @@ const RegisterPage = () => {
   const handleGoogleSuccess = (user, isNewUser) => {
     setUser(user)
     showSuccess(
-      isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
-      `Chào mừng ${user.displayName || user.email}!`,
+      isNewUser ? t("success.registerSuccess") : t("success.loginSuccess"),
+      `${t("success.welcome")} ${user.displayName || user.email}!`,
     )
     navigate(from, { replace: true })
   }
@@ -118,11 +120,11 @@ const RegisterPage = () => {
               />
             </svg>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Tạo tài khoản mới</h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">{t("auth.createAccount")}</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Hoặc{" "}
+            {t("auth.alreadyHaveAccount")}{" "}
             <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              đăng nhập vào tài khoản có sẵn
+              {t("auth.login")}
             </Link>
           </p>
         </div>
@@ -141,7 +143,7 @@ const RegisterPage = () => {
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">Hoặc đăng ký bằng email</span>
+              <span className="px-2 bg-gray-50 text-gray-500">{t("auth.registerWithEmail")}</span>
             </div>
           </div>
 
@@ -154,10 +156,10 @@ const RegisterPage = () => {
                 type="text"
                 autoComplete="name"
                 required
-                label="Tên hiển thị"
+                label={t("auth.displayName")}
                 value={formData.displayName}
                 onChange={handleChange}
-                placeholder="Nhập tên của bạn"
+                placeholder={t("auth.displayName")}
               />
 
               <Input
@@ -166,10 +168,10 @@ const RegisterPage = () => {
                 type="email"
                 autoComplete="email"
                 required
-                label="Địa chỉ email"
+                label={t("auth.email")}
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Nhập email của bạn"
+                placeholder={t("auth.email")}
               />
 
               <Input
@@ -178,10 +180,10 @@ const RegisterPage = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                label="Mật khẩu"
+                label={t("auth.password")}
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Nhập mật khẩu (ít nhất 6 ký tự)"
+                placeholder={t("auth.password")}
               />
 
               <Input
@@ -190,10 +192,10 @@ const RegisterPage = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                label="Xác nhận mật khẩu"
+                label={t("auth.confirmPassword")}
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="Nhập lại mật khẩu"
+                placeholder={t("auth.confirmPassword")}
               />
             </div>
 
@@ -206,20 +208,20 @@ const RegisterPage = () => {
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-900">
-                Tôi đồng ý với{" "}
+                {t("auth.agreeToTerms")}{" "}
                 <a href="#" className="text-blue-600 hover:text-blue-500">
-                  Điều khoản sử dụng
+                  {t("auth.termsOfService")}
                 </a>{" "}
-                và{" "}
+                {t("auth.and")}{" "}
                 <a href="#" className="text-blue-600 hover:text-blue-500">
-                  Chính sách bảo mật
+                  {t("auth.privacyPolicy")}
                 </a>
               </label>
             </div>
 
             <div>
               <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                {isLoading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
+                {isLoading ? t("auth.creatingAccount") : t("auth.register")}
               </Button>
             </div>
           </form>

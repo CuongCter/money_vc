@@ -2,13 +2,16 @@
 
 import { NavLink } from "react-router-dom"
 import { Home, CreditCard, BarChart2, Settings, X } from "lucide-react"
+import { useLanguageStore } from "../../store/languageStore"
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
+  const { t } = useLanguageStore()
+
   const navItems = [
-    { name: "Dashboard", path: "/", icon: Home },
-    { name: "Transactions", path: "/transactions", icon: CreditCard },
-    { name: "Reports", path: "/reports", icon: BarChart2 },
-    { name: "Settings", path: "/settings", icon: Settings },
+    { name: t("navigation.dashboard"), path: "/", icon: Home },
+    { name: t("navigation.transactions"), path: "/transactions", icon: CreditCard },
+    { name: t("navigation.reports"), path: "/reports", icon: BarChart2 },
+    { name: t("navigation.settings"), path: "/settings", icon: Settings },
   ]
 
   return (
@@ -26,7 +29,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center">
-            <span className="text-xl font-bold text-primary-600">ExpenseTracker</span>
+            <span className="text-xl font-bold text-primary-600">{t("app.name")}</span>
           </div>
           <button
             onClick={() => setIsOpen(false)}

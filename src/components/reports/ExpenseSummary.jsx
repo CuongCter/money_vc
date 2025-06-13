@@ -2,12 +2,14 @@
 
 import { useMemo } from "react"
 import { useCategoryStore } from "../../store/categoryStore"
+import { useLanguageStore } from "../../store/languageStore"
 import PieChart from "../charts/PieChart"
 import Card from "../ui/Card"
 import { formatCurrency } from "../../utils/formatDate"
 
 const ExpenseSummary = ({ transactions = [] }) => {
   const { getCategoryById } = useCategoryStore()
+  const { t } = useLanguageStore()
 
   // Group expenses by category
   const expensesByCategory = useMemo(() => {
@@ -31,12 +33,12 @@ const ExpenseSummary = ({ transactions = [] }) => {
 
     categoryIds.forEach((categoryId) => {
       const category = getCategoryById(categoryId)
-      labels.push(category?.name || "Không xác định")
+      labels.push(category?.name || t("common.noData"))
       data.push(expensesByCategory[categoryId])
     })
 
     return { data, labels }
-  }, [expensesByCategory, getCategoryById])
+  }, [expensesByCategory, getCategoryById, t])
 
   // Calculate total expenses
   const totalExpenses = useMemo(() => {
@@ -49,16 +51,16 @@ const ExpenseSummary = ({ transactions = [] }) => {
       .map(([categoryId, amount]) => ({
         categoryId,
         amount,
-        name: getCategoryById(categoryId)?.name || "Không xác định",
+        name: getCategoryById(categoryId)?.name || t("common.noData"),
       }))
       .sort((a, b) => b.amount - a.amount)
-  }, [expensesByCategory, getCategoryById])
+  }, [expensesByCategory, getCategoryById, t])
 
   if (transactions.length === 0 || totalExpenses === 0) {
     return (
       <Card>
         <Card.Content>
-          <p className="text-center text-gray-500">Không có dữ liệu chi tiêu trong khoảng thời gian này.</p>
+          <p className="text-center text-gray-500">{t("reports.noData")}</p>
         </Card.Content>
       </Card>
     )
@@ -68,16 +70,16 @@ const ExpenseSummary = ({ transactions = [] }) => {
     <div className="space-y-6">
       <Card>
         <Card.Header>
-          <h3 className="text-lg font-medium">Phân tích chi tiêu theo danh mục</h3>
+          <h3 className="text-lg font-medium">{t("reports.expenseAnalysis")}</h3>
         </Card.Header>
         <Card.Content>
-          <PieChart data={chartData.data} labels={chartData.labels} title="Tỷ lệ chi tiêu theo danh mục" />
+          <PieChart data={chartData.data} labels={chartData.labels} title={t("reports.expenseAnalysis")} />
         </Card.Content>
       </Card>
 
       <Card>
         <Card.Header>
-          <h3 className="text-lg font-medium">Chi tiêu theo danh mục</h3>
+          <h3 className="text-lg font-medium">{t("reports.expenseByCategory")}</h3>
         </Card.Header>
         <Card.Content>
           <div className="space-y-4">

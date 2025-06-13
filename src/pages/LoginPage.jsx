@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
 import { useNotificationStore } from "../store/notificationStore"
+import { useLanguageStore } from "../store/languageStore"
 import { login } from "../api/authService"
 import Input from "../components/ui/Input"
 import Button from "../components/ui/Button"
@@ -19,6 +20,7 @@ const LoginPage = () => {
   const location = useLocation()
   const { setUser, user, isInitialized } = useAuthStore()
   const { showSuccess, showError } = useNotificationStore()
+  const { t } = useLanguageStore()
 
   // Get the intended destination from location state
   const from = location.state?.from?.pathname || "/"
@@ -46,11 +48,11 @@ const LoginPage = () => {
 
       if (user) {
         setUser(user)
-        showSuccess("Đăng nhập thành công!", `Chào mừng ${user.displayName || user.email}!`)
+        showSuccess(t("success.loginSuccess"), `${t("success.welcome")} ${user.displayName || user.email}!`)
         navigate(from, { replace: true })
       }
     } catch (err) {
-      const errorMsg = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
+      const errorMsg = t("errors.unexpectedError")
       setError(errorMsg)
       showError(errorMsg)
     } finally {
@@ -62,8 +64,8 @@ const LoginPage = () => {
     setError("") // Clear any existing errors
     setUser(user)
     showSuccess(
-      isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
-      `Chào mừng ${user.displayName || user.email}!`,
+      isNewUser ? t("success.registerSuccess") : t("success.loginSuccess"),
+      `${t("success.welcome")} ${user.displayName || user.email}!`,
     )
     navigate(from, { replace: true })
   }
@@ -87,11 +89,11 @@ const LoginPage = () => {
               />
             </svg>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Đăng nhập vào tài khoản</h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">{t("auth.loginToAccount")}</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Hoặc{" "}
+            {t("auth.dontHaveAccount")}{" "}
             <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-              tạo tài khoản mới
+              {t("auth.createAccount")}
             </Link>
           </p>
         </div>
@@ -114,7 +116,7 @@ const LoginPage = () => {
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">Hoặc đăng nhập bằng email</span>
+              <span className="px-2 bg-gray-50 text-gray-500">{t("auth.loginWithEmail")}</span>
             </div>
           </div>
 
@@ -127,10 +129,10 @@ const LoginPage = () => {
                 type="email"
                 autoComplete="email"
                 required
-                label="Địa chỉ email"
+                label={t("auth.email")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Nhập email của bạn"
+                placeholder={t("auth.email")}
               />
 
               <Input
@@ -139,10 +141,10 @@ const LoginPage = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                label="Mật khẩu"
+                label={t("auth.password")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Nhập mật khẩu"
+                placeholder={t("auth.password")}
               />
             </div>
 
@@ -155,20 +157,20 @@ const LoginPage = () => {
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Ghi nhớ đăng nhập
+                  {t("auth.rememberMe")}
                 </label>
               </div>
 
               <div className="text-sm">
                 <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                  Quên mật khẩu?
+                  {t("auth.forgotPassword")}
                 </a>
               </div>
             </div>
 
             <div>
               <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+                {isLoading ? t("auth.loggingIn") : t("auth.login")}
               </Button>
             </div>
           </form>
