@@ -10,13 +10,15 @@ import AddTransactionPage from "../pages/AddTransactionPage"
 import ReportsPage from "../pages/ReportsPage"
 import SettingsPage from "../pages/SettingsPage"
 import LoadingSpinner from "../components/ui/LoadingSpinner"
+import { useLocation } from "react-router-dom"
 
-// Protected route component with better debugging
+// Protected route component
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuthStore()
+  const { user, loading, isInitialized } = useAuthStore()
+  const location = useLocation()
 
-  // Show loading spinner while checking auth state
-  if (loading) {
+  // Show loading while auth is being determined
+  if (!isInitialized || loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
@@ -27,9 +29,9 @@ const ProtectedRoute = ({ children }) => {
     )
   }
 
-  // If no user, redirect to login
+  // If no user after initialization, redirect to login
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   // User is authenticated, render children
@@ -38,10 +40,10 @@ const ProtectedRoute = ({ children }) => {
 
 // Public route component (redirect to dashboard if already logged in)
 const PublicRoute = ({ children }) => {
-  const { user, loading } = useAuthStore()
+  const { user, loading, isInitialized } = useAuthStore()
 
-  // Show loading spinner while checking auth state
-  if (loading) {
+  // Show loading while auth is being determined
+  if (!isInitialized || loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">

@@ -12,6 +12,9 @@ import {
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
 import { auth, db } from "../config/firebase"
 
+// Export auth for direct access
+export { auth }
+
 // Configure Google Auth Provider with production-friendly settings
 const createGoogleProvider = () => {
   const provider = new GoogleAuthProvider()
@@ -89,7 +92,7 @@ export const signInWithGoogle = async () => {
       const userDoc = await getDoc(doc(db, "users", user.uid))
       isNewUser = !userDoc.exists()
     } catch (firestoreError) {
-      // Continue with the flow even if Firestore check fails
+      console.warn("Error checking if user exists:", firestoreError)
     }
 
     // Create or update user document in Firestore
@@ -108,7 +111,7 @@ export const signInWithGoogle = async () => {
         { merge: true },
       )
     } catch (firestoreError) {
-      // Don't fail the entire flow if Firestore fails
+      console.warn("Error saving user to Firestore:", firestoreError)
     }
 
     return { user, error: null, isNewUser }
@@ -141,17 +144,21 @@ export const signInWithGoogleRedirect = async () => {
     await signInWithRedirect(auth, googleProvider)
     return { user: null, error: null, isRedirect: true }
   } catch (error) {
+    console.error("Error during Google redirect:", error)
     return { user: null, error: getErrorMessage(error.code), isRedirect: false }
   }
 }
 
-// Handle Google redirect result
+// Handle Google redirect result - IMPROVED VERSION
 export const getGoogleRedirectResult = async () => {
   try {
+    console.log("Checking for redirect result...")
     const result = await getRedirectResult(auth)
+    console.log("Redirect result:", result ? "Found" : "Not found")
 
-    if (result) {
+    if (result && result.user) {
       const user = result.user
+      console.log("User from redirect:", user.email)
 
       // Check if this is a new user
       let isNewUser = false
@@ -159,7 +166,7 @@ export const getGoogleRedirectResult = async () => {
         const userDoc = await getDoc(doc(db, "users", user.uid))
         isNewUser = !userDoc.exists()
       } catch (firestoreError) {
-        // Continue with the flow
+        console.warn("Could not check if user is new:", firestoreError)
       }
 
       // Create or update user document in Firestore
@@ -178,7 +185,7 @@ export const getGoogleRedirectResult = async () => {
           { merge: true },
         )
       } catch (firestoreError) {
-        // Continue with the flow
+        console.warn("Could not save user to Firestore:", firestoreError)
       }
 
       return { user, error: null, isNewUser }
@@ -186,6 +193,7 @@ export const getGoogleRedirectResult = async () => {
 
     return { user: null, error: null, isNewUser: false }
   } catch (error) {
+    console.error("Error getting redirect result:", error)
     return { user: null, error: getErrorMessage(error.code), isNewUser: false }
   }
 }
@@ -201,7 +209,7 @@ const updateUserLastLogin = async (uid) => {
       { merge: true },
     )
   } catch (error) {
-    // Silent fail
+    console.warn("Could not update last login time:", error)
   }
 }
 
@@ -215,9 +223,13 @@ export const logout = async () => {
   }
 }
 
-// Auth state observer
+// Auth state observer - IMPROVED VERSION
 export const onAuthStateChanged = (callback) => {
-  return firebaseAuthStateChanged(auth, callback)
+  console.log("Setting up auth state listener")
+  return firebaseAuthStateChanged(auth, (user) => {
+    console.log("Auth state changed:", user ? `User: ${user.email}` : "No user")
+    callback(user)
+  })
 }
 
 // Helper function to get user-friendly error messages

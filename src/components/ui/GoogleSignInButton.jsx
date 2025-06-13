@@ -4,6 +4,7 @@ import { useState } from "react"
 import { signInWithGoogle, signInWithGoogleRedirect } from "../../api/authService"
 import Button from "./Button"
 import LoadingSpinner from "./LoadingSpinner"
+import { useNotificationStore } from "../../store/notificationStore"
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -28,35 +29,45 @@ const GoogleIcon = () => (
 
 const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className = "" }) => {
   const [isLoading, setIsLoading] = useState(false)
+  const { showError } = useNotificationStore()
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
 
     try {
-      // Check if we're in production and use redirect method for better compatibility
+      console.log("Starting Google Sign-In process...")
+
+      // Always use redirect method for better compatibility
       const isProduction = window.location.hostname !== "localhost"
 
       if (isProduction) {
+        console.log("Using redirect method for production")
         // Use redirect method for production (Vercel)
         const redirectResult = await signInWithGoogleRedirect()
         if (redirectResult.isRedirect) {
+          console.log("Redirecting to Google...")
           // Redirect is happening, component will unmount
           return
         }
         if (redirectResult.error) {
+          console.error("Google redirect error:", redirectResult.error)
           if (onError) {
             onError(redirectResult.error)
           }
+          showError("Lỗi đăng nhập Google: " + redirectResult.error)
           return
         }
       } else {
+        console.log("Using popup method for development")
         // Use popup method for development
         const result = await signInWithGoogle()
         const { user, error, isNewUser } = result
 
         if (error) {
+          console.error("Google popup error:", error)
           // If popup fails, try redirect as fallback
           if (error.includes("popup") || error.includes("Popup") || error.includes("chặn")) {
+            console.log("Popup failed, trying redirect method")
             const redirectResult = await signInWithGoogleRedirect()
             if (redirectResult.isRedirect) {
               return
@@ -66,24 +77,31 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
           if (onError) {
             onError(error)
           }
+          showError("Lỗi đăng nhập Google: " + error)
           return
         }
 
         if (user) {
+          console.log("Google sign-in successful:", user.email)
           if (onSuccess) {
             onSuccess(user, isNewUser)
           }
         } else {
+          const errorMsg = "Không nhận được thông tin người dùng từ Google"
+          console.error(errorMsg)
           if (onError) {
-            onError("Không nhận được thông tin người dùng từ Google")
+            onError(errorMsg)
           }
+          showError(errorMsg)
         }
       }
     } catch (err) {
       const errorMsg = `Lỗi không mong muốn: ${err.message}`
+      console.error("Unexpected error:", err)
       if (onError) {
         onError(errorMsg)
       }
+      showError(errorMsg)
     } finally {
       setIsLoading(false)
     }
