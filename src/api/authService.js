@@ -8,12 +8,23 @@ import {
   getRedirectResult,
   updateProfile,
   onAuthStateChanged as firebaseAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
 } from "firebase/auth"
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
 import { auth, db } from "../config/firebase"
 
 // Export auth for direct access
 export { auth }
+
+// Set persistence to LOCAL (survive browser restart)
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log("Firebase persistence set to LOCAL")
+  })
+  .catch((error) => {
+    console.error("Error setting persistence:", error)
+  })
 
 // Configure Google Auth Provider with production-friendly settings
 const createGoogleProvider = () => {
@@ -26,7 +37,6 @@ const createGoogleProvider = () => {
   // Set custom parameters for better compatibility
   provider.setCustomParameters({
     prompt: "select_account",
-    access_type: "offline",
   })
 
   return provider
@@ -56,6 +66,7 @@ export const register = async (email, password, displayName) => {
 
     return { user, error: null, isNewUser: true }
   } catch (error) {
+    console.error("Registration error:", error)
     return { user: null, error: getErrorMessage(error.code), isNewUser: false }
   }
 }
@@ -71,6 +82,7 @@ export const login = async (email, password) => {
 
     return { user, error: null }
   } catch (error) {
+    console.error("Login error:", error)
     return { user: null, error: getErrorMessage(error.code) }
   }
 }
@@ -78,9 +90,12 @@ export const login = async (email, password) => {
 // Sign in with Google (Popup method - for development)
 export const signInWithGoogle = async () => {
   try {
+    console.log("Starting Google sign in with popup...")
     const googleProvider = createGoogleProvider()
     const userCredential = await signInWithPopup(auth, googleProvider)
     const user = userCredential.user
+
+    console.log("Google sign in successful:", user.email)
 
     if (!user) {
       return { user: null, error: "Không nhận được thông tin người dùng từ Google" }
@@ -116,6 +131,8 @@ export const signInWithGoogle = async () => {
 
     return { user, error: null, isNewUser }
   } catch (error) {
+    console.error("Google sign in error:", error)
+
     // Handle specific Google sign-in errors
     if (error.code === "auth/popup-closed-by-user") {
       return { user: null, error: "Đăng nhập bị hủy bởi người dùng" }
@@ -140,6 +157,7 @@ export const signInWithGoogle = async () => {
 // Sign in with Google (Redirect method - for production/mobile)
 export const signInWithGoogleRedirect = async () => {
   try {
+    console.log("Starting Google sign in with redirect...")
     const googleProvider = createGoogleProvider()
     await signInWithRedirect(auth, googleProvider)
     return { user: null, error: null, isRedirect: true }
@@ -149,7 +167,7 @@ export const signInWithGoogleRedirect = async () => {
   }
 }
 
-// Handle Google redirect result - IMPROVED VERSION
+// Handle Google redirect result
 export const getGoogleRedirectResult = async () => {
   try {
     console.log("Checking for redirect result...")
@@ -223,7 +241,7 @@ export const logout = async () => {
   }
 }
 
-// Auth state observer - IMPROVED VERSION
+// Auth state observer
 export const onAuthStateChanged = (callback) => {
   console.log("Setting up auth state listener")
   return firebaseAuthStateChanged(auth, (user) => {

@@ -12,6 +12,14 @@ export const firebaseConfig = {
   appId: import.meta.env.VITE_APP_ID,
 }
 
+// Log Firebase config for debugging (without sensitive values)
+console.log("Firebase config:", {
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  storageBucket: firebaseConfig.storageBucket,
+  messagingSenderId: firebaseConfig.messagingSenderId,
+})
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)
 

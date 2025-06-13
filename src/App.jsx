@@ -20,6 +20,7 @@ const AuthDebugger = () => {
       <div>Initialized: {isInitialized ? "true" : "false"}</div>
       <div>User: {user ? user.email : "null"}</div>
       <div>UID: {user?.uid || "null"}</div>
+      <div>Firebase User: {auth.currentUser ? auth.currentUser.email : "null"}</div>
     </div>
   )
 }
@@ -78,6 +79,15 @@ function App() {
           }
         })
 
+        // Set a timeout to prevent hanging if auth doesn't respond
+        setTimeout(() => {
+          if (mounted && isCheckingAuth) {
+            console.log("⏱️ Auth initialization timeout - forcing completion")
+            setInitialized(true)
+            setIsCheckingAuth(false)
+          }
+        }, 3000)
+
         return unsubscribe
       } catch (error) {
         console.error("❌ Auth initialization error:", error)
@@ -104,7 +114,7 @@ function App() {
         cleanup()
       }
     }
-  }, [setUser, setLoading, setInitialized, showError])
+  }, [setUser, setLoading, setInitialized, showError, isCheckingAuth])
 
   // Show loading screen while checking auth state
   if (isCheckingAuth) {

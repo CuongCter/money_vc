@@ -37,47 +37,21 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
     try {
       console.log("Starting Google Sign-In process...")
 
-      // Always use redirect method for better compatibility
-      const isProduction = window.location.hostname !== "localhost"
+      // Use popup method for local development
+      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
 
-      if (isProduction) {
-        console.log("Using redirect method for production")
-        // Use redirect method for production (Vercel)
-        const redirectResult = await signInWithGoogleRedirect()
-        if (redirectResult.isRedirect) {
-          console.log("Redirecting to Google...")
-          // Redirect is happening, component will unmount
-          return
-        }
-        if (redirectResult.error) {
-          console.error("Google redirect error:", redirectResult.error)
-          if (onError) {
-            onError(redirectResult.error)
-          }
-          showError("Lỗi đăng nhập Google: " + redirectResult.error)
-          return
-        }
-      } else {
-        console.log("Using popup method for development")
-        // Use popup method for development
+      if (isLocalhost) {
+        console.log("Using popup method for local development")
         const result = await signInWithGoogle()
         const { user, error, isNewUser } = result
 
         if (error) {
           console.error("Google popup error:", error)
-          // If popup fails, try redirect as fallback
-          if (error.includes("popup") || error.includes("Popup") || error.includes("chặn")) {
-            console.log("Popup failed, trying redirect method")
-            const redirectResult = await signInWithGoogleRedirect()
-            if (redirectResult.isRedirect) {
-              return
-            }
-          }
-
           if (onError) {
             onError(error)
           }
           showError("Lỗi đăng nhập Google: " + error)
+          setIsLoading(false)
           return
         }
 
@@ -93,6 +67,23 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
             onError(errorMsg)
           }
           showError(errorMsg)
+        }
+      } else {
+        console.log("Using redirect method for production")
+        // Use redirect method for production (Vercel)
+        const redirectResult = await signInWithGoogleRedirect()
+        if (redirectResult.isRedirect) {
+          console.log("Redirecting to Google...")
+          // Redirect is happening, component will unmount
+          return
+        }
+        if (redirectResult.error) {
+          console.error("Google redirect error:", redirectResult.error)
+          if (onError) {
+            onError(redirectResult.error)
+          }
+          showError("Lỗi đăng nhập Google: " + redirectResult.error)
+          return
         }
       }
     } catch (err) {

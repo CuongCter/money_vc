@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
 import { useNotificationStore } from "../store/notificationStore"
-import { login, getGoogleRedirectResult } from "../api/authService"
+import { login } from "../api/authService"
 import Input from "../components/ui/Input"
 import Button from "../components/ui/Button"
 import GoogleSignInButton from "../components/ui/GoogleSignInButton"
@@ -15,45 +15,22 @@ const LoginPage = () => {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true)
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(false)
 
   const navigate = useNavigate()
-  const { setUser, user } = useAuthStore()
+  const location = useLocation()
+  const { setUser, user, isInitialized } = useAuthStore()
   const { showSuccess, showError } = useNotificationStore()
+
+  // Get the intended destination from location state
+  const from = location.state?.from?.pathname || "/"
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
-      navigate("/", { replace: true })
+    if (isInitialized && user) {
+      navigate(from, { replace: true })
     }
-  }, [user, navigate])
-
-  // Check for Google redirect result on component mount
-  useEffect(() => {
-    const checkRedirectResult = async () => {
-      try {
-        const { user, error, isNewUser } = await getGoogleRedirectResult()
-
-        if (user) {
-          setUser(user)
-          showSuccess(
-            isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
-            `Chào mừng ${user.displayName || user.email}!`,
-          )
-          navigate("/", { replace: true })
-        } else if (error) {
-          setError(error)
-          showError(error)
-        }
-      } catch (err) {
-        showError("Đã xảy ra lỗi khi kiểm tra trạng thái đăng nhập")
-      } finally {
-        setIsCheckingRedirect(false)
-      }
-    }
-
-    checkRedirectResult()
-  }, [setUser, navigate, showSuccess, showError])
+  }, [user, isInitialized, navigate, from])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -72,7 +49,7 @@ const LoginPage = () => {
       if (user) {
         setUser(user)
         showSuccess("Đăng nhập thành công!", `Chào mừng ${user.displayName || user.email}!`)
-        navigate("/", { replace: true })
+        navigate(from, { replace: true })
       }
     } catch (err) {
       const errorMsg = "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại."
@@ -90,7 +67,7 @@ const LoginPage = () => {
       isNewUser ? "Tài khoản đã được tạo thành công!" : "Đăng nhập thành công!",
       `Chào mừng ${user.displayName || user.email}!`,
     )
-    navigate("/", { replace: true })
+    navigate(from, { replace: true })
   }
 
   const handleGoogleError = (error) => {
@@ -98,13 +75,13 @@ const LoginPage = () => {
     showError(error)
   }
 
-  // Show loading spinner while checking redirect result
-  if (isCheckingRedirect) {
+  // Show loading while processing redirect
+  if (isProcessingRedirect) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Đang kiểm tra trạng thái đăng nhập...</p>
+          <p className="mt-4 text-gray-600">Đang xử lý đăng nhập...</p>
         </div>
       </div>
     )
