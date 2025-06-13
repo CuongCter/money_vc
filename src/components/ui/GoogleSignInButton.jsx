@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { signInWithGoogle, signInWithGoogleRedirect } from "../../api/authService"
+import { signInWithGoogle } from "../../api/authService"
 import Button from "./Button"
 import LoadingSpinner from "./LoadingSpinner"
 import { useNotificationStore } from "../../store/notificationStore"
@@ -35,56 +35,34 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
     setIsLoading(true)
 
     try {
-      console.log("Starting Google Sign-In process...")
+      console.log("Starting Google Sign-In process with popup...")
 
-      // Use popup method for local development
-      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      // Luôn sử dụng phương thức popup cho cả local và production
+      const result = await signInWithGoogle()
+      const { user, error, isNewUser } = result
 
-      if (isLocalhost) {
-        console.log("Using popup method for local development")
-        const result = await signInWithGoogle()
-        const { user, error, isNewUser } = result
-
-        if (error) {
-          console.error("Google popup error:", error)
-          if (onError) {
-            onError(error)
-          }
-          showError("Lỗi đăng nhập Google: " + error)
-          setIsLoading(false)
-          return
+      if (error) {
+        console.error("Google popup error:", error)
+        if (onError) {
+          onError(error)
         }
+        showError("Lỗi đăng nhập Google: " + error)
+        setIsLoading(false)
+        return
+      }
 
-        if (user) {
-          console.log("Google sign-in successful:", user.email)
-          if (onSuccess) {
-            onSuccess(user, isNewUser)
-          }
-        } else {
-          const errorMsg = "Không nhận được thông tin người dùng từ Google"
-          console.error(errorMsg)
-          if (onError) {
-            onError(errorMsg)
-          }
-          showError(errorMsg)
+      if (user) {
+        console.log("Google sign-in successful:", user.email)
+        if (onSuccess) {
+          onSuccess(user, isNewUser)
         }
       } else {
-        console.log("Using redirect method for production")
-        // Use redirect method for production (Vercel)
-        const redirectResult = await signInWithGoogleRedirect()
-        if (redirectResult.isRedirect) {
-          console.log("Redirecting to Google...")
-          // Redirect is happening, component will unmount
-          return
+        const errorMsg = "Không nhận được thông tin người dùng từ Google"
+        console.error(errorMsg)
+        if (onError) {
+          onError(errorMsg)
         }
-        if (redirectResult.error) {
-          console.error("Google redirect error:", redirectResult.error)
-          if (onError) {
-            onError(redirectResult.error)
-          }
-          showError("Lỗi đăng nhập Google: " + redirectResult.error)
-          return
-        }
+        showError(errorMsg)
       }
     } catch (err) {
       const errorMsg = `Lỗi không mong muốn: ${err.message}`

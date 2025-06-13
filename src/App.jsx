@@ -4,11 +4,11 @@ import { BrowserRouter as Router } from "react-router-dom"
 
 import { useAuthStore } from "./store/authStore"
 import { useEffect, useState } from "react"
-import { onAuthStateChanged, getGoogleRedirectResult, auth } from "./api/authService"
+import { onAuthStateChanged, auth } from "./api/authService"
 import NotificationContainer from "./components/ui/Notification"
 import LoadingSpinner from "./components/ui/LoadingSpinner"
 import { useNotificationStore } from "./store/notificationStore"
-import AppRoutes from "./routers"
+import AppRoutes from "./routes"
 
 // Debug component to show auth state
 const AuthDebugger = () => {
@@ -46,19 +46,6 @@ function App() {
     const initializeAuth = async () => {
       try {
         console.log("🔄 Initializing auth...")
-
-        // First, check for Google redirect result
-        const redirectResult = await getGoogleRedirectResult()
-
-        if (redirectResult.user && mounted) {
-          console.log("✅ Redirect result found:", redirectResult.user.email)
-          setUser(redirectResult.user)
-          setInitialized(true)
-          setIsCheckingAuth(false)
-          return
-        } else {
-          console.log("❌ No redirect result found")
-        }
 
         // Check if we already have a user in Firebase auth
         if (auth.currentUser && mounted) {

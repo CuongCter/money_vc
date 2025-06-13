@@ -8,14 +8,12 @@ import { login } from "../api/authService"
 import Input from "../components/ui/Input"
 import Button from "../components/ui/Button"
 import GoogleSignInButton from "../components/ui/GoogleSignInButton"
-import LoadingSpinner from "../components/ui/LoadingSpinner"
 
 const LoginPage = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isProcessingRedirect, setIsProcessingRedirect] = useState(false)
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -73,18 +71,6 @@ const LoginPage = () => {
   const handleGoogleError = (error) => {
     setError(error)
     showError(error)
-  }
-
-  // Show loading while processing redirect
-  if (isProcessingRedirect) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Đang xử lý đăng nhập...</p>
-        </div>
-      </div>
-    )
   }
 
   return (

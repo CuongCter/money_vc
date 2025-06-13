@@ -4,8 +4,6 @@ import {
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   updateProfile,
   onAuthStateChanged as firebaseAuthStateChanged,
   setPersistence,
@@ -87,7 +85,7 @@ export const login = async (email, password) => {
   }
 }
 
-// Sign in with Google (Popup method - for development)
+// Sign in with Google (Popup method - for all environments)
 export const signInWithGoogle = async () => {
   try {
     console.log("Starting Google sign in with popup...")
@@ -138,7 +136,7 @@ export const signInWithGoogle = async () => {
       return { user: null, error: "Đăng nhập bị hủy bởi người dùng" }
     }
     if (error.code === "auth/popup-blocked") {
-      return { user: null, error: "Popup bị chặn. Vui lòng thử phương thức khác." }
+      return { user: null, error: "Popup bị chặn. Vui lòng cho phép popup trong trình duyệt." }
     }
     if (error.code === "auth/cancelled-popup-request") {
       return { user: null, error: "Yêu cầu đăng nhập bị hủy" }
@@ -151,68 +149,6 @@ export const signInWithGoogle = async () => {
     }
 
     return { user: null, error: getErrorMessage(error.code) }
-  }
-}
-
-// Sign in with Google (Redirect method - for production/mobile)
-export const signInWithGoogleRedirect = async () => {
-  try {
-    console.log("Starting Google sign in with redirect...")
-    const googleProvider = createGoogleProvider()
-    await signInWithRedirect(auth, googleProvider)
-    return { user: null, error: null, isRedirect: true }
-  } catch (error) {
-    console.error("Error during Google redirect:", error)
-    return { user: null, error: getErrorMessage(error.code), isRedirect: false }
-  }
-}
-
-// Handle Google redirect result
-export const getGoogleRedirectResult = async () => {
-  try {
-    console.log("Checking for redirect result...")
-    const result = await getRedirectResult(auth)
-    console.log("Redirect result:", result ? "Found" : "Not found")
-
-    if (result && result.user) {
-      const user = result.user
-      console.log("User from redirect:", user.email)
-
-      // Check if this is a new user
-      let isNewUser = false
-      try {
-        const userDoc = await getDoc(doc(db, "users", user.uid))
-        isNewUser = !userDoc.exists()
-      } catch (firestoreError) {
-        console.warn("Could not check if user is new:", firestoreError)
-      }
-
-      // Create or update user document in Firestore
-      try {
-        await setDoc(
-          doc(db, "users", user.uid),
-          {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || user.email?.split("@")[0] || "User",
-            photoURL: user.photoURL || null,
-            provider: "google",
-            lastLoginAt: serverTimestamp(),
-            ...(isNewUser && { createdAt: serverTimestamp() }),
-          },
-          { merge: true },
-        )
-      } catch (firestoreError) {
-        console.warn("Could not save user to Firestore:", firestoreError)
-      }
-
-      return { user, error: null, isNewUser }
-    }
-
-    return { user: null, error: null, isNewUser: false }
-  } catch (error) {
-    console.error("Error getting redirect result:", error)
-    return { user: null, error: getErrorMessage(error.code), isNewUser: false }
   }
 }
 
