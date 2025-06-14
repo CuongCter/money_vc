@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { useTransactionStore } from "../../store/transactionStore"
 import { useCategoryStore } from "../../store/categoryStore"
 import { useNotificationStore } from "../../store/notificationStore"
+import { useLanguageStore } from "../../store/languageStore"
 import { deleteTransaction } from "../../api/transactionService"
 import { ArrowUpRight, ArrowDownRight, Edit, Trash2 } from "lucide-react"
 import Button from "../ui/Button"
@@ -16,27 +17,26 @@ const TransactionList = ({ transactions = [], showActions = true }) => {
   const { deleteTransaction: removeTransaction } = useTransactionStore()
   const { getCategoryById } = useCategoryStore()
   const { showSuccess, showError } = useNotificationStore()
+  const { t } = useLanguageStore()
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) {
+    if (window.confirm(t("transactions.confirmDelete"))) {
       setIsDeleting(true)
       const { error } = await deleteTransaction(id)
 
       if (!error) {
         removeTransaction(id)
-        showSuccess("Giao dịch đã được xóa thành công!")
+        showSuccess(t("success.transactionDeleted"))
       } else {
-        showError("Đã xảy ra lỗi khi xóa giao dịch")
+        showError(t("errors.unexpectedError"))
       }
       setIsDeleting(false)
     }
   }
 
   if (transactions.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">Không có giao dịch nào. Hãy thêm giao dịch đầu tiên của bạn!</div>
-    )
+    return <div className="text-center py-8 text-gray-500">{t("transactions.noTransactions")}</div>
   }
 
   return (
@@ -45,26 +45,26 @@ const TransactionList = ({ transactions = [], showActions = true }) => {
         <thead className="bg-gray-50">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Ngày
+              {t("transactions.date")}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Mô tả
+              {t("transactions.description")}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Danh mục
+              {t("transactions.category")}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Loại
+              {t("transactions.type")}
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Số tiền
+              {t("transactions.amount")}
             </th>
             {showActions && (
               <th
                 scope="col"
                 className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Thao tác
+                {t("transactions.actions")}
               </th>
             )}
           </tr>
@@ -83,7 +83,7 @@ const TransactionList = ({ transactions = [], showActions = true }) => {
                   {transaction.description}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {category?.name || "Không xác định"}
+                  {category?.name || t("common.noData")}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <Badge variant={transaction.type === "income" ? "success" : "danger"} className="flex items-center">
@@ -92,7 +92,7 @@ const TransactionList = ({ transactions = [], showActions = true }) => {
                     ) : (
                       <ArrowDownRight size={12} className="mr-1" />
                     )}
-                    {transaction.type === "income" ? "Thu nhập" : "Chi tiêu"}
+                    {transaction.type === "income" ? t("transactions.income") : t("transactions.expense")}
                   </Badge>
                 </td>
                 <td

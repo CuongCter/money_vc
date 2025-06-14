@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAuthStore } from "../../store/authStore"
 import { useCategoryStore } from "../../store/categoryStore"
+import { useLanguageStore } from "../../store/languageStore"
 import { getTransactionStats } from "../../api/transactionService"
 import { getCategories } from "../../api/categoryService"
 import Card from "../ui/Card"
@@ -14,6 +15,7 @@ import LoadingSpinner from "../ui/LoadingSpinner"
 const MonthlyReport = ({ month, year }) => {
   const { user } = useAuthStore()
   const { setCategories } = useCategoryStore()
+  const { t } = useLanguageStore()
   const [stats, setStats] = useState({
     totalIncome: 0,
     totalExpense: 0,
@@ -51,15 +53,14 @@ const MonthlyReport = ({ month, year }) => {
           setTransactions(transactions)
         }
       } catch (err) {
-        setError("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.")
-        console.error(err)
+        setError(t("errors.unexpectedError"))
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchData()
-  }, [user, month, year, setCategories])
+  }, [user, month, year, setCategories, t])
 
   if (isLoading) {
     return (
@@ -73,25 +74,10 @@ const MonthlyReport = ({ month, year }) => {
     return <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">{error}</div>
   }
 
-  const monthNames = [
-    "Tháng 1",
-    "Tháng 2",
-    "Tháng 3",
-    "Tháng 4",
-    "Tháng 5",
-    "Tháng 6",
-    "Tháng 7",
-    "Tháng 8",
-    "Tháng 9",
-    "Tháng 10",
-    "Tháng 11",
-    "Tháng 12",
-  ]
-
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold">
-        Báo cáo {monthNames[month - 1]} {year}
+        {t("reports.monthlyReport")} {month}/{year}
       </h2>
 
       {/* Summary Cards */}
@@ -100,7 +86,7 @@ const MonthlyReport = ({ month, year }) => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-500">Số dư</p>
+              <p className="text-sm font-medium text-gray-500">{t("reports.balance")}</p>
               <div className="p-2 bg-blue-50 rounded-full">
                 <DollarSign size={20} className="text-blue-600" />
               </div>
@@ -113,7 +99,7 @@ const MonthlyReport = ({ month, year }) => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-500">Tổng thu</p>
+              <p className="text-sm font-medium text-gray-500">{t("reports.income")}</p>
               <div className="p-2 bg-green-50 rounded-full">
                 <ArrowUpRight size={20} className="text-green-600" />
               </div>
@@ -126,7 +112,7 @@ const MonthlyReport = ({ month, year }) => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-500">Tổng chi</p>
+              <p className="text-sm font-medium text-gray-500">{t("reports.expense")}</p>
               <div className="p-2 bg-red-50 rounded-full">
                 <ArrowDownRight size={20} className="text-red-600" />
               </div>

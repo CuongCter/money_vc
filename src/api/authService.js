@@ -4,35 +4,47 @@ import {
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   updateProfile,
   onAuthStateChanged as firebaseAuthStateChanged,
-} from "firebase/auth";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "../config/firebase";
+  setPersistence,
+  browserLocalPersistence,
+} from "firebase/auth"
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
+import { auth, db } from "../config/firebase"
 
-// Configure Google Auth Provider
-const googleProvider = new GoogleAuthProvider();
-googleProvider.addScope("email");
-googleProvider.addScope("profile");
-googleProvider.setCustomParameters({
-  prompt: "select_account",
-});
+// Export auth for direct access
+export { auth }
+
+// Set persistence to LOCAL (survive browser restart)
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error("Error setting persistence:", error)
+})
+
+// Configure Google Auth Provider with production-friendly settings
+const createGoogleProvider = () => {
+  const provider = new GoogleAuthProvider()
+
+  // Add required scopes
+  provider.addScope("email")
+  provider.addScope("profile")
+
+  // Set custom parameters for better compatibility
+  provider.setCustomParameters({
+    prompt: "select_account",
+  })
+
+  return provider
+}
 
 // Register with email and password
 export const register = async (email, password, displayName) => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const user = userCredential.user;
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+    const user = userCredential.user
 
     // Update profile with display name
     if (displayName) {
-      await updateProfile(user, { displayName });
+      await updateProfile(user, { displayName })
     }
 
     // Create user document in Firestore
@@ -44,53 +56,47 @@ export const register = async (email, password, displayName) => {
       provider: "email",
       createdAt: serverTimestamp(),
       lastLoginAt: serverTimestamp(),
-    });
+    })
 
-    return { user, error: null, isNewUser: true };
+    return { user, error: null, isNewUser: true }
   } catch (error) {
-    return { user: null, error: getErrorMessage(error.code), isNewUser: false };
+    return { user: null, error: getErrorMessage(error.code), isNewUser: false }
   }
-};
+}
 
 // Sign in with email and password
 export const login = async (email, password) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const user = userCredential.user;
+    const userCredential = await signInWithEmailAndPassword(auth, email, password)
+    const user = userCredential.user
 
     // Update last login time
-    await updateUserLastLogin(user.uid);
+    await updateUserLastLogin(user.uid)
 
-    return { user, error: null };
+    return { user, error: null }
   } catch (error) {
-    return { user: null, error: getErrorMessage(error.code) };
+    return { user: null, error: getErrorMessage(error.code) }
   }
-};
+}
 
-// Sign in with Google (Popup method)
+// Sign in with Google (Popup method - for all environments)
 export const signInWithGoogle = async () => {
   try {
-    const userCredential = await signInWithPopup(auth, googleProvider);
-    const user = userCredential.user;
+    const googleProvider = createGoogleProvider()
+    const userCredential = await signInWithPopup(auth, googleProvider)
+    const user = userCredential.user
 
     if (!user) {
-      return {
-        user: null,
-        error: "Không nhận được thông tin người dùng từ Google",
-      };
+      return { user: null, error: "Không nhận được thông tin người dùng từ Google" }
     }
 
     // Check if this is a new user
-    let isNewUser = false;
+    let isNewUser = false
     try {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      isNewUser = !userDoc.exists();
+      const userDoc = await getDoc(doc(db, "users", user.uid))
+      isNewUser = !userDoc.exists()
     } catch (firestoreError) {
-      // Continue with the flow even if Firestore check fails
+      console.warn("Error checking if user exists:", firestoreError)
     }
 
     // Create or update user document in Firestore
@@ -106,103 +112,34 @@ export const signInWithGoogle = async () => {
           lastLoginAt: serverTimestamp(),
           ...(isNewUser && { createdAt: serverTimestamp() }),
         },
-        { merge: true }
-      );
+        { merge: true },
+      )
     } catch (firestoreError) {
-      // Don't fail the entire flow if Firestore fails
+      console.warn("Error saving user to Firestore:", firestoreError)
     }
 
-    return { user, error: null, isNewUser };
+    return { user, error: null, isNewUser }
   } catch (error) {
     // Handle specific Google sign-in errors
     if (error.code === "auth/popup-closed-by-user") {
-      return { user: null, error: "Đăng nhập bị hủy bởi người dùng" };
+      return { user: null, error: "Đăng nhập bị hủy bởi người dùng" }
     }
     if (error.code === "auth/popup-blocked") {
-      return {
-        user: null,
-        error: "Popup bị chặn. Vui lòng cho phép popup và thử lại.",
-      };
+      return { user: null, error: "Popup bị chặn. Vui lòng cho phép popup trong trình duyệt." }
     }
     if (error.code === "auth/cancelled-popup-request") {
-      return { user: null, error: "Yêu cầu đăng nhập bị hủy" };
+      return { user: null, error: "Yêu cầu đăng nhập bị hủy" }
     }
     if (error.code === "auth/unauthorized-domain") {
-      return {
-        user: null,
-        error: "Domain này chưa được ủy quyền cho Google Sign-In",
-      };
+      return { user: null, error: "Domain chưa được ủy quyền. Vui lòng liên hệ quản trị viên." }
     }
     if (error.code === "auth/operation-not-allowed") {
-      return {
-        user: null,
-        error: "Google Sign-In chưa được kích hoạt trong Firebase",
-      };
+      return { user: null, error: "Google Sign-In chưa được kích hoạt" }
     }
 
-    return { user: null, error: getErrorMessage(error.code) };
+    return { user: null, error: getErrorMessage(error.code) }
   }
-};
-
-// Sign in with Google (Redirect method)
-export const signInWithGoogleRedirect = async () => {
-  try {
-    await signInWithRedirect(auth, googleProvider);
-    return { user: null, error: null, isRedirect: true };
-  } catch (error) {
-    return {
-      user: null,
-      error: getErrorMessage(error.code),
-      isRedirect: false,
-    };
-  }
-};
-
-// Handle Google redirect result
-export const getGoogleRedirectResult = async () => {
-  try {
-    const result = await getRedirectResult(auth);
-
-    if (result) {
-      const user = result.user;
-
-      // Check if this is a new user
-      let isNewUser = false;
-      try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        isNewUser = !userDoc.exists();
-      } catch (firestoreError) {
-        // Continue with the flow
-      }
-
-      // Create or update user document in Firestore
-      try {
-        await setDoc(
-          doc(db, "users", user.uid),
-          {
-            uid: user.uid,
-            email: user.email,
-            displayName:
-              user.displayName || user.email?.split("@")[0] || "User",
-            photoURL: user.photoURL || null,
-            provider: "google",
-            lastLoginAt: serverTimestamp(),
-            ...(isNewUser && { createdAt: serverTimestamp() }),
-          },
-          { merge: true }
-        );
-      } catch (firestoreError) {
-        // Continue with the flow
-      }
-
-      return { user, error: null, isNewUser };
-    }
-
-    return { user: null, error: null, isNewUser: false };
-  } catch (error) {
-    return { user: null, error: getErrorMessage(error.code), isNewUser: false };
-  }
-};
+}
 
 // Update user's last login time
 const updateUserLastLogin = async (uid) => {
@@ -212,72 +149,72 @@ const updateUserLastLogin = async (uid) => {
       {
         lastLoginAt: serverTimestamp(),
       },
-      { merge: true }
-    );
+      { merge: true },
+    )
   } catch (error) {
-    // Silent fail
+    console.warn("Could not update last login time:", error)
   }
-};
+}
 
 // Sign out
 export const logout = async () => {
   try {
-    await firebaseSignOut(auth);
-    return { error: null };
+    await firebaseSignOut(auth)
+    return { error: null }
   } catch (error) {
-    return { error: getErrorMessage(error.code) };
+    return { error: getErrorMessage(error.code) }
   }
-};
+}
 
 // Auth state observer
 export const onAuthStateChanged = (callback) => {
-  return firebaseAuthStateChanged(auth, callback);
-};
+  return firebaseAuthStateChanged(auth, (user) => {
+    callback(user)
+  })
+}
 
 // Helper function to get user-friendly error messages
 const getErrorMessage = (errorCode) => {
   switch (errorCode) {
     case "auth/user-not-found":
-      return "Không tìm thấy tài khoản với email này.";
+      return "Không tìm thấy tài khoản với email này."
     case "auth/wrong-password":
-      return "Mật khẩu không chính xác.";
+      return "Mật khẩu không chính xác."
     case "auth/email-already-in-use":
-      return "Email này đã được sử dụng cho tài khoản khác.";
+      return "Email này đã được sử dụng cho tài khoản khác."
     case "auth/weak-password":
-      return "Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.";
+      return "Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn."
     case "auth/invalid-email":
-      return "Địa chỉ email không hợp lệ.";
+      return "Địa chỉ email không hợp lệ."
     case "auth/user-disabled":
-      return "Tài khoản này đã bị vô hiệu hóa.";
+      return "Tài khoản này đã bị vô hiệu hóa."
     case "auth/too-many-requests":
-      return "Quá nhiều yêu cầu đăng nhập. Vui lòng thử lại sau.";
+      return "Quá nhiều yêu cầu đăng nhập. Vui lòng thử lại sau."
     case "auth/network-request-failed":
-      return "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet.";
+      return "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet."
     case "auth/invalid-credential":
-      return "Thông tin đăng nhập không hợp lệ.";
+      return "Thông tin đăng nhập không hợp lệ."
     case "auth/account-exists-with-different-credential":
-      return "Tài khoản đã tồn tại với phương thức đăng nhập khác.";
+      return "Tài khoản đã tồn tại với phương thức đăng nhập khác."
     case "auth/operation-not-allowed":
-      return "Google Sign-In chưa được kích hoạt trong Firebase Console.";
+      return "Phương thức đăng nhập này chưa được kích hoạt."
     case "auth/unauthorized-domain":
-      return "Domain này chưa được ủy quyền cho Google Sign-In.";
+      return "Domain chưa được ủy quyền cho Google Sign-In."
     case "auth/invalid-verification-code":
-      return "Mã xác thực không hợp lệ.";
+      return "Mã xác thực không hợp lệ."
     case "auth/invalid-verification-id":
-      return "ID xác thực không hợp lệ.";
+      return "ID xác thực không hợp lệ."
     default:
-      return `Lỗi không xác định (${errorCode}). Vui lòng thử lại.`;
+      return `Lỗi không xác định (${errorCode}). Vui lòng thử lại.`
   }
-};
+}
 
 // Check if user is signed in with Google
 export const isGoogleUser = (user) => {
-  return user?.providerData?.some(
-    (provider) => provider.providerId === "google.com"
-  );
-};
+  return user?.providerData?.some((provider) => provider.providerId === "google.com")
+}
 
 // Get user provider info
 export const getUserProviders = (user) => {
-  return user?.providerData?.map((provider) => provider.providerId) || [];
-};
+  return user?.providerData?.map((provider) => provider.providerId) || []
+}

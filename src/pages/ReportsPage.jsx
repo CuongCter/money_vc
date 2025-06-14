@@ -4,25 +4,27 @@ import { useState } from "react"
 import MonthlyReport from "../components/reports/MonthlyReport"
 import Button from "../components/ui/Button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useLanguageStore } from "../store/languageStore"
 
 const ReportsPage = () => {
+  const { t } = useLanguageStore()
   const currentDate = new Date()
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear())
 
   const monthNames = [
-    "Tháng 1",
-    "Tháng 2",
-    "Tháng 3",
-    "Tháng 4",
-    "Tháng 5",
-    "Tháng 6",
-    "Tháng 7",
-    "Tháng 8",
-    "Tháng 9",
-    "Tháng 10",
-    "Tháng 11",
-    "Tháng 12",
+    t("months.january"),
+    t("months.february"),
+    t("months.march"),
+    t("months.april"),
+    t("months.may"),
+    t("months.june"),
+    t("months.july"),
+    t("months.august"),
+    t("months.september"),
+    t("months.october"),
+    t("months.november"),
+    t("months.december"),
   ]
 
   const handlePreviousMonth = () => {
@@ -46,7 +48,7 @@ const ReportsPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Báo cáo</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("reports.reports")}</h1>
 
         {/* Month/Year Navigation */}
         <div className="flex items-center space-x-2">

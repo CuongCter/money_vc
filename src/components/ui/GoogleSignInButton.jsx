@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { signInWithGoogle, signInWithGoogleRedirect } from "../../api/authService"
+import { signInWithGoogle } from "../../api/authService"
 import Button from "./Button"
 import LoadingSpinner from "./LoadingSpinner"
+import { useNotificationStore } from "../../store/notificationStore"
+import { useLanguageStore } from "../../store/languageStore"
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -28,28 +30,22 @@ const GoogleIcon = () => (
 
 const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className = "" }) => {
   const [isLoading, setIsLoading] = useState(false)
+  const { showError } = useNotificationStore()
+  const { t } = useLanguageStore()
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
 
     try {
-      // Try popup method first
       const result = await signInWithGoogle()
       const { user, error, isNewUser } = result
 
       if (error) {
-        // If popup is blocked, try redirect method
-        if (error.includes("popup") || error.includes("Popup") || error.includes("chặn")) {
-          const redirectResult = await signInWithGoogleRedirect()
-          if (redirectResult.isRedirect) {
-            // Redirect is happening, no need to handle here
-            return
-          }
-        }
-
         if (onError) {
           onError(error)
         }
+        showError(error)
+        setIsLoading(false)
         return
       }
 
@@ -58,15 +54,18 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
           onSuccess(user, isNewUser)
         }
       } else {
+        const errorMsg = t("errors.unexpectedError")
         if (onError) {
-          onError("Không nhận được thông tin người dùng từ Google")
+          onError(errorMsg)
         }
+        showError(errorMsg)
       }
     } catch (err) {
-      const errorMsg = `Lỗi không mong muốn: ${err.message}`
+      const errorMsg = `${t("errors.unexpectedError")}: ${err.message}`
       if (onError) {
         onError(errorMsg)
       }
+      showError(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -81,7 +80,7 @@ const GoogleSignInButton = ({ onSuccess, onError, variant = "outline", className
       className={`w-full flex items-center justify-center gap-3 ${className}`}
     >
       {isLoading ? <LoadingSpinner size="sm" /> : <GoogleIcon />}
-      <span>{isLoading ? "Đang đăng nhập..." : "Đăng nhập với Google"}</span>
+      <span>{isLoading ? t("auth.loggingIn") : t("auth.loginWithGoogle")}</span>
     </Button>
   )
 }

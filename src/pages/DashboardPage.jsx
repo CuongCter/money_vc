@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
 import { useTransactionStore } from "../store/transactionStore"
 import { useCategoryStore } from "../store/categoryStore"
+import { useLanguageStore } from "../store/languageStore"
 import { getTransactions } from "../api/transactionService"
 import { getCategories } from "../api/categoryService"
 import { ArrowUpRight, ArrowDownRight, Plus, DollarSign } from "lucide-react"
@@ -19,6 +20,7 @@ const DashboardPage = () => {
   const { transactions, setTransactions, setLoading, isLoading, getTotalIncome, getTotalExpense, getBalance } =
     useTransactionStore()
   const { setCategories } = useCategoryStore()
+  const { t } = useLanguageStore()
   const navigate = useNavigate()
   const [error, setError] = useState(null)
 
@@ -46,15 +48,14 @@ const DashboardPage = () => {
           setTransactions(transactions)
         }
       } catch (err) {
-        setError("Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.")
-        console.error(err)
+        setError(t("errors.unexpectedError"))
       } finally {
         setLoading(false)
       }
     }
 
     fetchData()
-  }, [user, setLoading, setTransactions, setCategories])
+  }, [user, setLoading, setTransactions, setCategories, t])
 
   // Get recent transactions (last 5)
   const recentTransactions = transactions.slice(0, 5)
@@ -74,10 +75,10 @@ const DashboardPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Tổng quan</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("dashboard.overview")}</h1>
         <Button onClick={() => navigate("/transactions/add")}>
           <Plus size={16} className="mr-2" />
-          Thêm giao dịch
+          {t("dashboard.addTransaction")}
         </Button>
       </div>
 
@@ -87,7 +88,7 @@ const DashboardPage = () => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-500">Số dư hiện tại</p>
+              <p className="text-sm font-medium text-gray-500">{t("dashboard.currentBalance")}</p>
               <div className="p-2 bg-blue-50 rounded-full">
                 <DollarSign size={20} className="text-blue-600" />
               </div>
@@ -100,7 +101,7 @@ const DashboardPage = () => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-500">Tổng thu nhập</p>
+              <p className="text-sm font-medium text-gray-500">{t("dashboard.totalIncome")}</p>
               <div className="p-2 bg-green-50 rounded-full">
                 <ArrowUpRight size={20} className="text-green-600" />
               </div>
@@ -113,7 +114,7 @@ const DashboardPage = () => {
         <Card>
           <Card.Content className="p-6">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-500">Tổng chi tiêu</p>
+              <p className="text-sm font-medium text-gray-500">{t("dashboard.totalExpense")}</p>
               <div className="p-2 bg-red-50 rounded-full">
                 <ArrowDownRight size={20} className="text-red-600" />
               </div>
@@ -127,9 +128,9 @@ const DashboardPage = () => {
       <Card>
         <Card.Header>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-gray-900">Giao dịch gần đây</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t("dashboard.recentTransactions")}</h2>
             <Button variant="ghost" size="sm" onClick={() => navigate("/transactions")}>
-              Xem tất cả
+              {t("dashboard.viewAll")}
             </Button>
           </div>
         </Card.Header>

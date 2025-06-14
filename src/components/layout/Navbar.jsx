@@ -4,13 +4,16 @@ import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuthStore } from "../../store/authStore"
 import { useNotificationStore } from "../../store/notificationStore"
+import { useLanguageStore } from "../../store/languageStore"
 import { logout } from "../../api/authService"
 import { Menu, Bell, User, LogOut, Search } from "lucide-react"
+import LanguageSwitcher from "../ui/LanguageSwitcher"
 
 const Navbar = ({ onMenuClick }) => {
   const navigate = useNavigate()
   const { user, logout: logoutStore } = useAuthStore()
   const { showSuccess, showError } = useNotificationStore()
+  const { t } = useLanguageStore()
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -18,10 +21,10 @@ const Navbar = ({ onMenuClick }) => {
     try {
       await logout()
       logoutStore()
-      showSuccess("Đăng xuất thành công!", "Hẹn gặp lại bạn!")
+      showSuccess(t("success.logoutSuccess"), t("success.seeYouAgain"))
       navigate("/login")
     } catch (error) {
-      showError("Đã xảy ra lỗi khi đăng xuất")
+      showError(t("errors.unexpectedError"))
     }
   }
 
@@ -70,7 +73,7 @@ const Navbar = ({ onMenuClick }) => {
           </button>
 
           <div className="ml-4 md:ml-6">
-            <h1 className="text-lg font-semibold text-gray-900">My Expense App</h1>
+            <h1 className="text-lg font-semibold text-gray-900">{t("app.name")}</h1>
           </div>
         </div>
 
@@ -81,13 +84,15 @@ const Navbar = ({ onMenuClick }) => {
             </div>
             <input
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="Tìm kiếm giao dịch..."
+              placeholder={t("common.search")}
               type="search"
             />
           </div>
         </div>
 
         <div className="flex items-center">
+          <LanguageSwitcher className="mr-2" />
+
           <button
             className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
             aria-label="Notifications"
@@ -131,7 +136,7 @@ const Navbar = ({ onMenuClick }) => {
                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                 >
                   <User size={16} />
-                  Cài đặt tài khoản
+                  {t("settings.profile")}
                 </button>
 
                 <button
@@ -142,7 +147,7 @@ const Navbar = ({ onMenuClick }) => {
                   className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                 >
                   <LogOut size={16} />
-                  Đăng xuất
+                  {t("auth.logout")}
                 </button>
               </div>
             )}

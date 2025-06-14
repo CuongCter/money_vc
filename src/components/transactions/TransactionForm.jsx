@@ -6,6 +6,7 @@ import { useAuthStore } from "../../store/authStore"
 import { useTransactionStore } from "../../store/transactionStore"
 import { useCategoryStore } from "../../store/categoryStore"
 import { useNotificationStore } from "../../store/notificationStore"
+import { useLanguageStore } from "../../store/languageStore"
 import { addTransaction, updateTransaction } from "../../api/transactionService"
 import Button from "../ui/Button"
 import Input from "../ui/Input"
@@ -16,6 +17,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
   const { addTransaction: addToStore, updateTransaction: updateInStore } = useTransactionStore()
   const { categories } = useCategoryStore()
   const { showSuccess, showError } = useNotificationStore()
+  const { t } = useLanguageStore()
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
@@ -55,21 +57,21 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
 
     // Validate form
     if (!formData.description.trim()) {
-      const errorMsg = "Vui lòng nhập mô tả"
+      const errorMsg = t("errors.descriptionRequired")
       setError(errorMsg)
       showError(errorMsg)
       return
     }
 
     if (!formData.amount || isNaN(formData.amount) || Number.parseFloat(formData.amount) <= 0) {
-      const errorMsg = "Vui lòng nhập số tiền hợp lệ"
+      const errorMsg = t("errors.invalidAmount")
       setError(errorMsg)
       showError(errorMsg)
       return
     }
 
     if (!formData.categoryId) {
-      const errorMsg = "Vui lòng chọn danh mục"
+      const errorMsg = t("errors.categoryRequired")
       setError(errorMsg)
       showError(errorMsg)
       return
@@ -96,7 +98,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
 
         // Update in local store
         updateInStore(transaction.id, transactionData)
-        showSuccess("Giao dịch đã được cập nhật thành công!")
+        showSuccess(t("success.transactionUpdated"))
       } else {
         // Add new transaction
         const { id, error } = await addTransaction(transactionData, user.uid)
@@ -109,7 +111,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
 
         // Add to local store
         addToStore({ id, ...transactionData })
-        showSuccess("Giao dịch đã được thêm thành công!")
+        showSuccess(t("success.transactionAdded"))
       }
 
       // Call success callback or navigate
@@ -119,7 +121,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
         navigate("/transactions")
       }
     } catch (err) {
-      const errorMsg = "Đã xảy ra lỗi. Vui lòng thử lại."
+      const errorMsg = t("errors.unexpectedError")
       setError(errorMsg)
       showError(errorMsg)
     } finally {
@@ -137,17 +139,17 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Input
-            label="Mô tả"
+            label={t("transactions.description")}
             id="description"
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Ví dụ: Mua thực phẩm"
+            placeholder={t("transactions.description")}
             required
           />
 
           <Input
-            label="Số tiền"
+            label={t("transactions.amount")}
             id="amount"
             name="amount"
             type="number"
@@ -159,7 +161,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
           />
 
           <Input
-            label="Ngày"
+            label={t("transactions.date")}
             id="date"
             name="date"
             type="date"
@@ -170,7 +172,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
 
           <div className="space-y-1">
             <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
-              Danh mục
+              {t("transactions.category")}
             </label>
             <select
               id="categoryId"
@@ -181,7 +183,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
               required
             >
               <option value="" disabled>
-                Chọn danh mục
+                {t("transactions.selectCategory")}
               </option>
               {filteredCategories.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -192,7 +194,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Loại</label>
+            <label className="block text-sm font-medium text-gray-700">{t("transactions.type")}</label>
             <div className="flex space-x-4 mt-1">
               <label className="inline-flex items-center">
                 <input
@@ -203,7 +205,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
                   onChange={handleChange}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                 />
-                <span className="ml-2 text-sm text-gray-700">Chi tiêu</span>
+                <span className="ml-2 text-sm text-gray-700">{t("transactions.expense")}</span>
               </label>
               <label className="inline-flex items-center">
                 <input
@@ -214,21 +216,21 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
                   onChange={handleChange}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                 />
-                <span className="ml-2 text-sm text-gray-700">Thu nhập</span>
+                <span className="ml-2 text-sm text-gray-700">{t("transactions.income")}</span>
               </label>
             </div>
           </div>
 
           <div className="md:col-span-2">
             <label htmlFor="note" className="block text-sm font-medium text-gray-700">
-              Ghi chú (tùy chọn)
+              {t("transactions.note")} ({t("transactions.optional")})
             </label>
             <textarea
               id="note"
               name="note"
               rows={3}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              placeholder="Thêm ghi chú..."
+              placeholder={t("transactions.note")}
               value={formData.note}
               onChange={handleChange}
             />
@@ -237,10 +239,10 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
 
         <div className="flex justify-end space-x-3">
           <Button type="button" variant="outline" onClick={() => navigate("/transactions")}>
-            Hủy
+            {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Đang lưu..." : transaction ? "Cập nhật" : "Lưu"}
+            {isLoading ? t("common.loading") : transaction ? t("common.save") : t("common.add")}
           </Button>
         </div>
       </form>
