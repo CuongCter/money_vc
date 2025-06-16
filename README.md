@@ -186,7 +186,7 @@ src/
 #### 2. Quản lý giao dịch
 - **Thêm giao dịch**: Nhập thông tin thu/chi với danh mục
 - **Chỉnh sửa**: Cập nhật thông tin giao dịch đã có
-- **Xóa**: Loại bỏ giao d��ch không cần thiết
+- **Xóa**: Loại bỏ giao dịch không cần thiết
 - **Tìm kiếm**: Lọc theo ngày, danh mục, loại giao dịch
 
 #### 3. Phân loại danh mục
@@ -504,6 +504,7 @@ We welcome all contributions! Please:
 3. Commit changes: `git commit -m 'Add amazing feature'`
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Create Pull Request
+
 
 ### 📝 License
 
