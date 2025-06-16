@@ -27,7 +27,7 @@ export const DEFAULT_CATEGORIES = [
   { name: "Giải trí", type: "expense", icon: "film", isDefault: true },
   { name: "Y tế", type: "expense", icon: "activity", isDefault: true },
   { name: "Giáo dục", type: "expense", icon: "book", isDefault: true },
-  { name: "Khác", type: "expense", icon: "more-horizontal", isDefault: true },
+  { name: "Khác", type: "expense", icon: "plus-circle", isDefault: true },
 ]
 
 // Create default categories for a new user
@@ -39,7 +39,7 @@ export const createDefaultCategories = async (userId) => {
       batch.push(
         addDoc(collection(db, "categories"), {
           ...category,
-          userId: userId, // Đảm bảo userId được set
+          userId: userId,
           createdAt: serverTimestamp(),
         }),
       )
@@ -104,25 +104,30 @@ export const addCategory = async (category, userId) => {
 
     return { id: docRef.id, ...category, error: null }
   } catch (error) {
+    console.error("Error adding category:", error)
     return { error: error.message }
   }
 }
 
 // Update a category (only if it belongs to the user and is not a default category)
-export const updateCategory = async (id, category, userId) => {
+export const updateCategory = async (id, categoryData, userId) => {
   try {
-    const docRef = doc(db, "categories", id)
-
-    // Only update if it's not a default category and belongs to the user
-    if (!category.isDefault && category.userId === userId) {
-      await updateDoc(docRef, {
-        ...category,
-        updatedAt: serverTimestamp(),
-      })
+    if (!id) {
+      return { error: "Category ID is required" }
     }
 
+    const docRef = doc(db, "categories", id)
+
+    // Prepare update data
+    const updateData = {
+      ...categoryData,
+      updatedAt: serverTimestamp(),
+    }
+
+    await updateDoc(docRef, updateData)
     return { error: null }
   } catch (error) {
+    console.error("Error updating category:", error)
     return { error: error.message }
   }
 }
@@ -130,14 +135,41 @@ export const updateCategory = async (id, category, userId) => {
 // Delete a category (only if it belongs to the user and is not a default category)
 export const deleteCategory = async (id, category) => {
   try {
-    // Only delete if it's not a default category
-    if (!category.isDefault) {
-      const docRef = doc(db, "categories", id)
-      await deleteDoc(docRef)
+    if (!id) {
+      return { error: "Category ID is required" }
     }
 
+    // Only delete if it's not a default category
+    if (category.isDefault) {
+      return { error: "Cannot delete default category" }
+    }
+
+    const docRef = doc(db, "categories", id)
+    await deleteDoc(docRef)
     return { error: null }
   } catch (error) {
+    console.error("Error deleting category:", error)
     return { error: error.message }
+  }
+}
+
+// Check if category is being used by any transactions
+export const checkCategoryUsage = async (categoryId, userId) => {
+  try {
+    const transactionsQuery = query(
+      collection(db, "transactions"),
+      where("userId", "==", userId),
+      where("categoryId", "==", categoryId),
+    )
+
+    const snapshot = await getDocs(transactionsQuery)
+    return {
+      isUsed: !snapshot.empty,
+      count: snapshot.size,
+      error: null,
+    }
+  } catch (error) {
+    console.error("Error checking category usage:", error)
+    return { isUsed: false, count: 0, error: error.message }
   }
 }
