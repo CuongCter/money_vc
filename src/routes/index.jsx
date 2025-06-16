@@ -7,6 +7,7 @@ import RegisterPage from "../pages/RegisterPage"
 import NotFoundPage from "../pages/NotFoundPage"
 import TransactionsPage from "../pages/TransactionsPage"
 import AddTransactionPage from "../pages/AddTransactionPage"
+import EditTransactionPage from "../pages/EditTransactionPage"
 import ReportsPage from "../pages/ReportsPage"
 import SettingsPage from "../pages/SettingsPage"
 import LoadingSpinner from "../components/ui/LoadingSpinner"
@@ -96,6 +97,7 @@ const AppRoutes = () => {
         <Route index element={<DashboardPage />} />
         <Route path="transactions" element={<TransactionsPage />} />
         <Route path="transactions/add" element={<AddTransactionPage />} />
+        <Route path="transactions/edit/:id" element={<EditTransactionPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
