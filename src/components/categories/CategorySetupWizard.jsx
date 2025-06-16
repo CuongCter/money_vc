@@ -58,24 +58,6 @@ const ICON_MAP = {
   "more-horizontal": MoreHorizontal,
 }
 
-const DEFAULT_CATEGORIES_PREVIEW = [
-  // Income categories
-  { name: "Lương", type: "income", icon: "wallet", isDefault: true },
-  { name: "Thưởng", type: "income", icon: "gift", isDefault: true },
-  { name: "Đầu tư", type: "income", icon: "trending-up", isDefault: true },
-  { name: "Khác", type: "income", icon: "plus-circle", isDefault: true },
-
-  // Expense categories
-  { name: "Ăn uống", type: "expense", icon: "coffee", isDefault: true },
-  { name: "Di chuyển", type: "expense", icon: "car", isDefault: true },
-  { name: "Hóa đơn", type: "expense", icon: "file-text", isDefault: true },
-  { name: "Mua sắm", type: "expense", icon: "shopping-bag", isDefault: true },
-  { name: "Giải trí", type: "expense", icon: "film", isDefault: true },
-  { name: "Y tế", type: "expense", icon: "activity", isDefault: true },
-  { name: "Giáo dục", type: "expense", icon: "book", isDefault: true },
-  { name: "Khác", type: "expense", icon: "more-horizontal", isDefault: true },
-]
-
 const CategorySetupWizard = ({ onComplete }) => {
   const { user } = useAuthStore()
   const { setCategories } = useCategoryStore()
@@ -83,6 +65,24 @@ const CategorySetupWizard = ({ onComplete }) => {
   const { t } = useLanguageStore()
   const [isLoading, setIsLoading] = useState(false)
   const [step, setStep] = useState(1)
+
+  const DEFAULT_CATEGORIES_PREVIEW = [
+    // Income categories
+    { name: t("icons.wallet"), type: "income", icon: "wallet", isDefault: true },
+    { name: t("icons.gift"), type: "income", icon: "gift", isDefault: true },
+    { name: t("icons.trending-up"), type: "income", icon: "trending-up", isDefault: true },
+    { name: t("icons.plus-circle"), type: "income", icon: "plus-circle", isDefault: true },
+
+    // Expense categories
+    { name: t("icons.coffee"), type: "expense", icon: "coffee", isDefault: true },
+    { name: t("icons.car"), type: "expense", icon: "car", isDefault: true },
+    { name: t("icons.file-text"), type: "expense", icon: "file-text", isDefault: true },
+    { name: t("icons.shopping-bag"), type: "expense", icon: "shopping-bag", isDefault: true },
+    { name: t("icons.film"), type: "expense", icon: "film", isDefault: true },
+    { name: t("icons.activity"), type: "expense", icon: "activity", isDefault: true },
+    { name: t("icons.book"), type: "expense", icon: "book", isDefault: true },
+    { name: t("icons.plus-circle"), type: "expense", icon: "more-horizontal", isDefault: true },
+  ]
 
   const handleCreateDefaultCategories = async () => {
     if (!user?.uid) return
@@ -100,13 +100,13 @@ const CategorySetupWizard = ({ onComplete }) => {
         }))
         setCategories(categoriesWithIds)
 
-        showSuccess("Đã tạo danh mục mặc định thành công!")
+        showSuccess(t("success.categoriesCreated"))
         if (onComplete) onComplete()
       } else {
-        showError(`Lỗi tạo danh mục: ${error}`)
+        showError(`${t("common.error")}: ${error}`)
       }
     } catch (err) {
-      showError("Không thể tạo danh mục mặc định")
+      showError(t("errors.unexpectedError"))
     } finally {
       setIsLoading(false)
     }
@@ -122,26 +122,24 @@ const CategorySetupWizard = ({ onComplete }) => {
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <PlusCircle size={32} className="text-blue-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Chào mừng đến với My Expense App!</h2>
-          <p className="text-gray-600">Để bắt đầu quản lý chi tiêu, bạn cần tạo các danh mục cho giao dịch của mình.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("categorySetup.welcome")}</h2>
+          <p className="text-gray-600">{t("categorySetup.welcomeDesc")}</p>
         </div>
 
         <div className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-medium text-blue-900 mb-2">🚀 Tùy chọn nhanh (Khuyến nghị)</h3>
-            <p className="text-blue-700 text-sm mb-3">
-              Chúng tôi sẽ tạo sẵn các danh mục phổ biến để bạn có thể bắt đầu ngay lập tức.
-            </p>
+            <h3 className="font-medium text-blue-900 mb-2">🚀 {t("categorySetup.quickOption")}</h3>
+            <p className="text-blue-700 text-sm mb-3">{t("categorySetup.quickOptionDesc")}</p>
             <Button onClick={() => setStep(2)} className="w-full">
-              Xem danh mục mặc định
+              {t("categorySetup.viewDefault")}
             </Button>
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-2">⚙️ Tùy chỉnh thủ công</h3>
-            <p className="text-gray-600 text-sm mb-3">Tạo danh mục theo nhu cầu riêng của bạn.</p>
+            <h3 className="font-medium text-gray-900 mb-2">⚙️ {t("categorySetup.customOption")}</h3>
+            <p className="text-gray-600 text-sm mb-3">{t("categorySetup.customOptionDesc")}</p>
             <Button variant="outline" onClick={() => onComplete && onComplete()} className="w-full">
-              Tự tạo danh mục
+              {t("categorySetup.createCustom")}
             </Button>
           </div>
         </div>
@@ -153,11 +151,11 @@ const CategorySetupWizard = ({ onComplete }) => {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-4xl mx-auto">
       <div className="mb-6">
         <button onClick={() => setStep(1)} className="text-blue-600 hover:text-blue-800 text-sm font-medium mb-4">
-          ← Quay lại
+          ← {t("common.back")}
         </button>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Danh mục mặc định</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{t("categorySetup.defaultCategories")}</h2>
         <p className="text-gray-600">
-          Chúng tôi sẽ tạo {DEFAULT_CATEGORIES_PREVIEW.length} danh mục phổ biến để bạn bắt đầu.
+          {t("categorySetup.defaultCategoriesDesc").replace("{count}", DEFAULT_CATEGORIES_PREVIEW.length)}
         </p>
       </div>
 
@@ -166,7 +164,7 @@ const CategorySetupWizard = ({ onComplete }) => {
         <div>
           <h3 className="font-medium text-green-700 mb-3 flex items-center">
             <TrendingUp size={16} className="mr-2" />
-            Danh mục Thu nhập ({incomeCategories.length})
+            {t("categories.incomeCategories")} ({incomeCategories.length})
           </h3>
           <div className="space-y-2">
             {incomeCategories.map((category, index) => {
@@ -187,7 +185,7 @@ const CategorySetupWizard = ({ onComplete }) => {
         <div>
           <h3 className="font-medium text-red-700 mb-3 flex items-center">
             <Coffee size={16} className="mr-2" />
-            Danh mục Chi tiêu ({expenseCategories.length})
+            {t("categories.expenseCategories")} ({expenseCategories.length})
           </h3>
           <div className="space-y-2">
             {expenseCategories.map((category, index) => {
@@ -206,26 +204,26 @@ const CategorySetupWizard = ({ onComplete }) => {
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <h4 className="font-medium text-blue-900 mb-2">💡 Lưu ý:</h4>
+        <h4 className="font-medium text-blue-900 mb-2">💡 {t("categorySetup.note")}</h4>
         <ul className="text-blue-700 text-sm space-y-1">
-          <li>• Bạn có thể chỉnh sửa hoặc xóa các danh mục này sau</li>
-          <li>• Có thể thêm danh mục mới bất cứ lúc nào</li>
-          <li>• Mỗi danh mục có thể được tùy chỉnh icon và tên</li>
+          {t("categorySetup.noteItems").map((item, index) => (
+            <li key={index}>• {item}</li>
+          ))}
         </ul>
       </div>
 
       <div className="flex justify-end space-x-3">
         <Button variant="outline" onClick={() => onComplete && onComplete()}>
-          Bỏ qua, tự tạo
+          {t("categorySetup.skipCreate")}
         </Button>
         <Button onClick={handleCreateDefaultCategories} disabled={isLoading} className="min-w-[140px]">
           {isLoading ? (
             <div className="flex items-center">
               <LoadingSpinner size="sm" className="mr-2" />
-              Đang tạo...
+              {t("categorySetup.creating")}
             </div>
           ) : (
-            "Tạo danh mục"
+            t("categorySetup.createCategories")
           )}
         </Button>
       </div>

@@ -46,17 +46,17 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
         if (!error) {
           setCategories(fetchedCategories)
         } else {
-          showError(`Lỗi tải danh mục: ${error}`)
+          showError(`${t("common.error")}: ${error}`)
         }
       } catch (err) {
-        showError("Không thể tải danh mục")
+        showError(t("errors.loadingError"))
       } finally {
         setIsLoadingCategories(false)
       }
     }
 
     loadCategories()
-  }, [user, setCategories, showError])
+  }, [user, setCategories, showError, t])
 
   // If editing, populate form with transaction data
   useEffect(() => {
@@ -104,7 +104,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
     if (!formData.description.trim()) {
       newErrors.description = t("errors.descriptionRequired")
     } else if (formData.description.trim().length < 2) {
-      newErrors.description = "Mô tả phải có ít nhất 2 ký tự"
+      newErrors.description = t("errors.descriptionTooShort")
     }
 
     // Validate amount
@@ -113,15 +113,15 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
     } else {
       const amount = Number.parseFloat(formData.amount)
       if (isNaN(amount) || amount <= 0) {
-        newErrors.amount = "Số tiền phải lớn hơn 0"
+        newErrors.amount = t("errors.amountMustBePositive")
       } else if (amount > 999999999) {
-        newErrors.amount = "Số tiền quá lớn"
+        newErrors.amount = t("errors.amountTooLarge")
       }
     }
 
     // Validate date
     if (!formData.date) {
-      newErrors.date = "Vui lòng chọn ngày"
+      newErrors.date = t("errors.dateRequired")
     } else {
       const selectedDate = new Date(formData.date)
       const today = new Date()
@@ -129,9 +129,9 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
       oneYearAgo.setFullYear(today.getFullYear() - 1)
 
       if (selectedDate > today) {
-        newErrors.date = "Không thể chọn ngày trong tương lai"
+        newErrors.date = t("errors.dateFuture")
       } else if (selectedDate < oneYearAgo) {
-        newErrors.date = "Ngày không được quá 1 năm trước"
+        newErrors.date = t("errors.dateTooOld")
       }
     }
 
@@ -169,7 +169,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
     e.preventDefault()
 
     if (!validateForm()) {
-      showError("Vui lòng kiểm tra lại thông tin")
+      showError(t("errors.unexpectedError"))
       return
     }
 
@@ -189,7 +189,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
         const { error } = await updateTransaction(transaction.id, transactionData)
 
         if (error) {
-          showError(`Lỗi cập nhật: ${error}`)
+          showError(`${t("common.error")}: ${error}`)
           return
         }
 
@@ -201,7 +201,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
         const { id, error } = await addTransaction(transactionData, user.uid)
 
         if (error) {
-          showError(`Lỗi thêm giao dịch: ${error}`)
+          showError(`${t("common.error")}: ${error}`)
           return
         }
 
@@ -239,7 +239,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
           {transaction ? t("transactions.editTransaction") : t("transactions.addTransaction")}
         </h2>
         <p className="text-sm text-gray-600 mt-1">
-          {transaction ? "Cập nhật thông tin giao dịch" : "Nhập thông tin giao dịch mới"}
+          {transaction ? t("transactions.transactionInfo") : t("transactions.enterDescription")}
         </p>
       </div>
 
@@ -294,7 +294,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="VD: Ăn trưa, Lương tháng 12..."
+              placeholder={t("transactions.enterDescription")}
               className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.description ? "border-red-500" : "border-gray-300"
               }`}
@@ -315,7 +315,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
                 name="amount"
                 value={formData.amount}
                 onChange={handleAmountChange}
-                placeholder="0"
+                placeholder={t("transactions.enterAmount")}
                 className={`w-full pl-8 pr-12 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   errors.amount ? "border-red-500" : "border-gray-300"
                 }`}
@@ -363,7 +363,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
               } ${isLoadingCategories ? "bg-gray-100" : ""}`}
             >
               <option value="" disabled>
-                {isLoadingCategories ? "Đang tải..." : t("transactions.selectCategory")}
+                {isLoadingCategories ? t("common.loading") : t("transactions.selectCategory")}
               </option>
               {filteredCategories.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -374,13 +374,13 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
             {errors.categoryId && <p className="text-sm text-red-600">{errors.categoryId}</p>}
             {filteredCategories.length === 0 && !isLoadingCategories && (
               <p className="text-sm text-amber-600">
-                Chưa có danh mục {formData.type === "expense" ? "chi tiêu" : "thu nhập"}.
+                {t("categories.noCategories")}
                 <button
                   type="button"
                   onClick={() => navigate("/settings")}
                   className="ml-1 text-blue-600 hover:underline"
                 >
-                  Tạo danh mục mới
+                  {t("categories.addCategory")}
                 </button>
               </p>
             )}
@@ -390,7 +390,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
         {/* Note */}
         <div className="space-y-1">
           <label htmlFor="note" className="block text-sm font-medium text-gray-700">
-            {t("transactions.note")} ({t("transactions.optional")})
+            {t("transactions.note")} ({t("common.optional")})
           </label>
           <textarea
             id="note"
@@ -398,7 +398,7 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
             rows={3}
             value={formData.note}
             onChange={handleChange}
-            placeholder="Ghi chú thêm về giao dịch này..."
+            placeholder={t("transactions.addNote")}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
           />
         </div>
@@ -412,10 +412,10 @@ const TransactionForm = ({ transaction = null, onSuccess }) => {
             {isLoading ? (
               <div className="flex items-center">
                 <LoadingSpinner size="sm" className="mr-2" />
-                {transaction ? "Đang cập nhật..." : "Đang thêm..."}
+                {transaction ? t("transactions.updating") : t("transactions.adding")}
               </div>
             ) : transaction ? (
-              "Cập nhật"
+              t("common.update")
             ) : (
               t("common.add")
             )}

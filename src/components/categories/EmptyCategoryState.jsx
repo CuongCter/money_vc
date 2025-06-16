@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useLanguageStore } from "../../store/languageStore"
 import Button from "../ui/Button"
 import CategorySetupWizard from "./CategorySetupWizard"
 import { PlusCircle, Settings, BookOpen } from "lucide-react"
@@ -9,6 +10,7 @@ import { PlusCircle, Settings, BookOpen } from "lucide-react"
 const EmptyCategoryState = ({ type = "all" }) => {
   const [showWizard, setShowWizard] = useState(false)
   const navigate = useNavigate()
+  const { t } = useLanguageStore()
 
   const handleWizardComplete = () => {
     setShowWizard(false)
@@ -23,22 +25,22 @@ const EmptyCategoryState = ({ type = "all" }) => {
   const getTitle = () => {
     switch (type) {
       case "expense":
-        return "Chưa có danh mục chi tiêu"
+        return t("categories.expenseCategories")
       case "income":
-        return "Chưa có danh mục thu nhập"
+        return t("categories.incomeCategories")
       default:
-        return "Chưa có danh mục nào"
+        return t("categories.noCategories")
     }
   }
 
   const getDescription = () => {
     switch (type) {
       case "expense":
-        return "Tạo danh mục chi tiêu để phân loại các khoản chi như ăn uống, di chuyển, mua sắm..."
+        return t("categories.expenseCategories")
       case "income":
-        return "Tạo danh mục thu nhập để phân loại các nguồn thu như lương, thưởng, đầu tư..."
+        return t("categories.incomeCategories")
       default:
-        return "Danh mục giúp bạn phân loại và quản lý giao dịch một cách có tổ chức."
+        return t("categories.createFirst")
     }
   }
 
@@ -55,21 +57,21 @@ const EmptyCategoryState = ({ type = "all" }) => {
         <div className="space-y-3">
           <Button onClick={() => setShowWizard(true)} className="w-full">
             <BookOpen size={16} className="mr-2" />
-            Tạo danh mục mặc định
+            {t("categorySetup.viewDefault")}
           </Button>
 
           <Button variant="outline" onClick={() => navigate("/settings")} className="w-full">
             <Settings size={16} className="mr-2" />
-            Tự tạo danh mục
+            {t("categorySetup.createCustom")}
           </Button>
         </div>
 
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-left">
-          <h4 className="font-medium text-blue-900 mb-2">💡 Gợi ý:</h4>
+          <h4 className="font-medium text-blue-900 mb-2">💡 {t("categorySetup.note")}</h4>
           <ul className="text-blue-700 text-sm space-y-1">
-            <li>• Bắt đầu với danh mục mặc định để tiết kiệm thời gian</li>
-            <li>• Có thể chỉnh sửa hoặc thêm danh mục mới sau</li>
-            <li>• Mỗi giao dịch cần có danh mục để dễ theo dõi</li>
+            {t("categorySetup.noteItems").map((item, index) => (
+              <li key={index}>• {item}</li>
+            ))}
           </ul>
         </div>
       </div>

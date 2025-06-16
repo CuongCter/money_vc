@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useCategoryStore } from "../../store/categoryStore"
 import { useNotificationStore } from "../../store/notificationStore"
+import { useLanguageStore } from "../../store/languageStore"
 import { deleteCategory } from "../../api/categoryService"
 import { Edit, Trash2, MoreVertical } from "lucide-react"
 import Button from "../ui/Button"
@@ -37,6 +38,7 @@ const ICON_EMOJI_MAP = {
 const CategoryCard = ({ category, showActions = true }) => {
   const { deleteCategory: removeCategory } = useCategoryStore()
   const { showSuccess, showError } = useNotificationStore()
+  const { t } = useLanguageStore()
 
   const [showDropdown, setShowDropdown] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -69,7 +71,7 @@ const CategoryCard = ({ category, showActions = true }) => {
   const handleDelete = () => {
     setShowDropdown(false)
     if (category.isDefault) {
-      showError("Không thể xóa danh mục mặc định")
+      showError(t("categories.cannotDeleteDefault"))
       return
     }
     setShowDeleteModal(true)
@@ -81,14 +83,14 @@ const CategoryCard = ({ category, showActions = true }) => {
       const { error } = await deleteCategory(category.id, category)
 
       if (error) {
-        showError(`Lỗi xóa danh mục: ${error}`)
+        showError(`${t("common.error")}: ${error}`)
       } else {
         removeCategory(category.id)
-        showSuccess("Đã xóa danh mục thành công!")
+        showSuccess(t("success.categoryDeleted"))
         setShowDeleteModal(false)
       }
     } catch (err) {
-      showError("Không thể xóa danh mục")
+      showError(t("errors.unexpectedError"))
     } finally {
       setIsDeleting(false)
     }
@@ -96,7 +98,7 @@ const CategoryCard = ({ category, showActions = true }) => {
 
   const handleEditSuccess = () => {
     setShowEditModal(false)
-    showSuccess("Đã cập nhật danh mục thành công!")
+    showSuccess(t("success.categoryUpdated"))
     // Reload to get fresh data
     setTimeout(() => {
       window.location.reload()
@@ -145,10 +147,12 @@ const CategoryCard = ({ category, showActions = true }) => {
                     category.type === "income" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                   }`}
                 >
-                  {category.type === "income" ? "Thu nhập" : "Chi tiêu"}
+                  {category.type === "income" ? t("transactions.income") : t("transactions.expense")}
                 </span>
                 {category.isDefault && (
-                  <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">Mặc định</span>
+                  <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    {t("categories.default")}
+                  </span>
                 )}
               </div>
             </div>
@@ -170,7 +174,7 @@ const CategoryCard = ({ category, showActions = true }) => {
                     className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                   >
                     <Edit size={14} className="mr-2" />
-                    Sửa
+                    {t("common.edit")}
                   </button>
                   {!category.isDefault && (
                     <button
@@ -178,7 +182,7 @@ const CategoryCard = ({ category, showActions = true }) => {
                       className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
                     >
                       <Trash2 size={14} className="mr-2" />
-                      Xóa
+                      {t("common.delete")}
                     </button>
                   )}
                 </div>
@@ -189,31 +193,36 @@ const CategoryCard = ({ category, showActions = true }) => {
       </div>
 
       {/* Edit Modal */}
-      <Modal isOpen={showEditModal} onClose={handleEditCancel} title="Sửa danh mục" size="lg">
+      <Modal isOpen={showEditModal} onClose={handleEditCancel} title={t("categories.editCategory")} size="lg">
         <CategoryForm category={category} onSuccess={handleEditSuccess} onCancel={handleEditCancel} />
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Xác nhận xóa danh mục" size="sm">
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title={t("modal.confirmDelete")}
+        size="sm"
+      >
         <div className="space-y-4">
           <div className="flex items-center p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
               <Trash2 size={20} className="text-red-600" />
             </div>
             <div>
-              <h4 className="font-medium text-red-900">Xóa danh mục "{category.name}"?</h4>
-              <p className="text-sm text-red-700 mt-1">
-                Hành động này không thể hoàn tác. Các giao dịch sử dụng danh mục này sẽ hiển thị "Không có danh mục".
-              </p>
+              <h4 className="font-medium text-red-900">
+                {t("categories.confirmDelete").replace("{name}", category.name)}
+              </h4>
+              <p className="text-sm text-red-700 mt-1">{t("categories.deleteWarning")}</p>
             </div>
           </div>
 
           <div className="flex justify-end space-x-3">
             <Button variant="outline" onClick={() => setShowDeleteModal(false)} disabled={isDeleting}>
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button variant="danger" onClick={confirmDelete} disabled={isDeleting}>
-              {isDeleting ? "Đang xóa..." : "Xóa danh mục"}
+              {isDeleting ? t("form.processing") : t("common.delete")}
             </Button>
           </div>
         </div>

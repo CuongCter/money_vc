@@ -186,7 +186,7 @@ src/
 #### 2. Quản lý giao dịch
 - **Thêm giao dịch**: Nhập thông tin thu/chi với danh mục
 - **Chỉnh sửa**: Cập nhật thông tin giao dịch đã có
-- **Xóa**: Loại bỏ giao dịch không cần thiết
+- **Xóa**: Loại bỏ giao d��ch không cần thiết
 - **Tìm kiếm**: Lọc theo ngày, danh mục, loại giao dịch
 
 #### 3. Phân loại danh mục
@@ -511,9 +511,8 @@ This project is distributed under the MIT License. See `LICENSE` file for more d
 
 ### 📞 Contact
 
-- **Email**: your-email@example.com
-- **GitHub**: [@your-username](https://github.com/your-username)
-- **Website**: [your-website.com](https://your-website.com)
+- **Email**: vancuong442002@gmail.com
+- **GitHub**: [CuongCter](https://github.com/CuongCter)
 
 ---
 
@@ -560,4 +559,4 @@ This project is distributed under the MIT License. See `LICENSE` file for more d
 
 ---
 
-**Made with ❤️ by [ CuongCter ]**
+**Made with ❤️ by [CuongCter]**
