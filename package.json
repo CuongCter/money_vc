@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mui/icons-material": "^7.1.1",
+    "@mui/material": "^7.1.1",
     "@tailwindcss/vite": "^4.1.8",
     "chart.js": "^4.4.9",
     "date-fns": "^4.1.0",

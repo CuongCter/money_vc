@@ -12,6 +12,7 @@ import ReportsPage from "../pages/ReportsPage"
 import SettingsPage from "../pages/SettingsPage"
 import LoadingSpinner from "../components/ui/LoadingSpinner"
 import { useLocation } from "react-router-dom"
+import BudgetPage from "../pages/BudgetPage"
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -99,6 +100,7 @@ const AppRoutes = () => {
         <Route path="transactions/add" element={<AddTransactionPage />} />
         <Route path="transactions/edit/:id" element={<EditTransactionPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="budget" element={<BudgetPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
