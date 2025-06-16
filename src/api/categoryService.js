@@ -39,7 +39,7 @@ export const createDefaultCategories = async (userId) => {
       batch.push(
         addDoc(collection(db, "categories"), {
           ...category,
-          userId,
+          userId: userId, // Đảm bảo userId được set
           createdAt: serverTimestamp(),
         }),
       )
@@ -48,6 +48,7 @@ export const createDefaultCategories = async (userId) => {
     await Promise.all(batch)
     return { success: true, error: null }
   } catch (error) {
+    console.error("Error creating default categories:", error)
     return { success: false, error: error.message }
   }
 }
@@ -55,12 +56,29 @@ export const createDefaultCategories = async (userId) => {
 // Get all categories for a user (including default ones)
 export const getCategories = async (userId) => {
   try {
-    const q = query(collection(db, "categories"), where("userId", "in", [userId, null]))
+    // First, get user's own categories
+    const userCategoriesQuery = query(collection(db, "categories"), where("userId", "==", userId))
 
-    const querySnapshot = await getDocs(q)
+    // Then, get default categories (where userId is null or doesn't exist)
+    const defaultCategoriesQuery = query(collection(db, "categories"), where("userId", "==", null))
+
+    const [userSnapshot, defaultSnapshot] = await Promise.all([
+      getDocs(userCategoriesQuery),
+      getDocs(defaultCategoriesQuery),
+    ])
+
     const categories = []
 
-    querySnapshot.forEach((doc) => {
+    // Add user categories
+    userSnapshot.forEach((doc) => {
+      categories.push({
+        id: doc.id,
+        ...doc.data(),
+      })
+    })
+
+    // Add default categories
+    defaultSnapshot.forEach((doc) => {
       categories.push({
         id: doc.id,
         ...doc.data(),
@@ -69,6 +87,7 @@ export const getCategories = async (userId) => {
 
     return { categories, error: null }
   } catch (error) {
+    console.error("Error getting categories:", error)
     return { categories: [], error: error.message }
   }
 }

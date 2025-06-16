@@ -1,19 +1,58 @@
 "use client"
 
-import { useState } from "react"
-import CategoryList from "../components/categories/CategoryList"
+import { useState, useEffect } from "react"
+import { useCategoryStore } from "../store/categoryStore"
+import { useAuthStore } from "../store/authStore"
 import { useLanguageStore } from "../store/languageStore"
+import { getCategories } from "../api/categoryService"
+import EmptyCategoryState from "../components/categories/EmptyCategoryState"
+import QuickCategoryCreator from "../components/categories/QuickCategoryCreator"
+import LoadingSpinner from "../components/ui/LoadingSpinner"
 import { Globe } from "lucide-react"
 
 const SettingsPage = () => {
+  const { user } = useAuthStore()
+  const { categories, setCategories } = useCategoryStore()
   const { t, language, setLanguage } = useLanguageStore()
   const [activeTab, setActiveTab] = useState("categories")
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (!user?.uid) return
+
+      setIsLoading(true)
+      try {
+        const { categories: fetchedCategories, error } = await getCategories(user.uid)
+        if (!error) {
+          setCategories(fetchedCategories)
+        }
+      } catch (err) {
+        console.error("Error loading categories:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadCategories()
+  }, [user, setCategories])
 
   const tabs = [
     { id: "categories", name: t("settings.categories") },
     { id: "profile", name: t("settings.profile") },
     { id: "preferences", name: t("settings.preferences") },
   ]
+
+  const expenseCategories = categories.filter((cat) => cat.type === "expense")
+  const incomeCategories = categories.filter((cat) => cat.type === "income")
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -42,8 +81,71 @@ const SettingsPage = () => {
       <div className="mt-6">
         {activeTab === "categories" && (
           <div className="space-y-8">
-            <CategoryList type="expense" />
-            <CategoryList type="income" />
+            {categories.length === 0 ? (
+              <EmptyCategoryState />
+            ) : (
+              <>
+                {/* Expense Categories */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-medium text-red-700">
+                      {t("categories.expenseCategories")} ({expenseCategories.length})
+                    </h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    {expenseCategories.map((category) => (
+                      <div key={category.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-red-600 text-xs">{category.icon?.slice(0, 2) || "📝"}</span>
+                            </div>
+                            <span className="font-medium">{category.name}</span>
+                          </div>
+                          {category.isDefault && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                              {t("categories.default")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <QuickCategoryCreator type="expense" onSuccess={() => window.location.reload()} />
+                  </div>
+                </div>
+
+                {/* Income Categories */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-medium text-green-700">
+                      {t("categories.incomeCategories")} ({incomeCategories.length})
+                    </h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    {incomeCategories.map((category) => (
+                      <div key={category.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-green-600 text-xs">{category.icon?.slice(0, 2) || "💰"}</span>
+                            </div>
+                            <span className="font-medium">{category.name}</span>
+                          </div>
+                          {category.isDefault && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                              {t("categories.default")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <QuickCategoryCreator type="income" onSuccess={() => window.location.reload()} />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -88,8 +190,6 @@ const SettingsPage = () => {
                 </button>
               </div>
             </div>
-
-            {/* Other preferences can be added here */}
           </div>
         )}
       </div>

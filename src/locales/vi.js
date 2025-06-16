@@ -138,7 +138,7 @@ export const vi = {
     seeYouAgain: "Hẹn gặp lại bạn!",
   },
   app: {
-    name: "My Expense App",
+    name: "Quản lý chi tiêu",
   },
   navigation: {
     dashboard: "Tổng quan",

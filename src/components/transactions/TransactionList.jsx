@@ -10,7 +10,7 @@ import { deleteTransaction } from "../../api/transactionService"
 import { ArrowUpRight, ArrowDownRight, Edit, Trash2 } from "lucide-react"
 import Button from "../ui/Button"
 import Badge from "../ui/Badge"
-import { formatCurrency } from "../../utils/formatDate"
+import { formatCurrency, safeFormatDate } from "../../utils/formatDate"
 
 const TransactionList = ({ transactions = [], showActions = true }) => {
   const navigate = useNavigate()
@@ -72,21 +72,55 @@ const TransactionList = ({ transactions = [], showActions = true }) => {
         <tbody className="bg-white divide-y divide-gray-200">
           {transactions.map((transaction) => {
             const category = getCategoryById(transaction.categoryId)
+
             return (
               <tr key={transaction.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {transaction.date instanceof Date
-                    ? transaction.date.toLocaleDateString()
-                    : new Date(transaction.date.seconds * 1000).toLocaleDateString()}
+                  {safeFormatDate(transaction.date)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {transaction.description}
+                  {transaction.description || "Không có mô tả"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {category?.name || t("common.noData")}
+                  <div className="flex items-center">
+                    {category?.icon && (
+                      <span className="mr-2 text-xs">
+                        {category.icon === "coffee" && "☕"}
+                        {category.icon === "car" && "🚗"}
+                        {category.icon === "shopping-bag" && "🛍️"}
+                        {category.icon === "film" && "🎬"}
+                        {category.icon === "wallet" && "💼"}
+                        {category.icon === "gift" && "🎁"}
+                        {category.icon === "file-text" && "📄"}
+                        {category.icon === "activity" && "🏥"}
+                        {category.icon === "book" && "📚"}
+                        {category.icon === "trending-up" && "📈"}
+                        {category.icon === "plus-circle" && "➕"}
+                        {category.icon === "more-horizontal" && "➕"}
+                        {![
+                          "coffee",
+                          "car",
+                          "shopping-bag",
+                          "film",
+                          "wallet",
+                          "gift",
+                          "file-text",
+                          "activity",
+                          "book",
+                          "trending-up",
+                          "plus-circle",
+                          "more-horizontal",
+                        ].includes(category.icon) && "📝"}
+                      </span>
+                    )}
+                    {category?.name || "Không có danh mục"}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <Badge variant={transaction.type === "income" ? "success" : "danger"} className="flex items-center">
+                  <Badge
+                    variant={transaction.type === "income" ? "success" : "danger"}
+                    className="flex items-center w-fit"
+                  >
                     {transaction.type === "income" ? (
                       <ArrowUpRight size={12} className="mr-1" />
                     ) : (
@@ -100,6 +134,7 @@ const TransactionList = ({ transactions = [], showActions = true }) => {
                     transaction.type === "income" ? "text-green-600" : "text-red-600"
                   }`}
                 >
+                  {transaction.type === "income" ? "+" : "-"}
                   {formatCurrency(transaction.amount)}
                 </td>
                 {showActions && (

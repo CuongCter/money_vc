@@ -2,16 +2,22 @@
 
 import { useEffect, useState } from "react"
 import { useTransactionStore } from "../store/transactionStore"
+import { useCategoryStore } from "../store/categoryStore"
 import { useAuthStore } from "../store/authStore"
 import { useLanguageStore } from "../store/languageStore"
-import { getTransactions, deleteTransaction } from "../api/firestoreService"
+import { useNotificationStore } from "../store/notificationStore"
+import { getTransactions, deleteTransaction } from "../api/transactionService"
+import { getCategories } from "../api/categoryService"
 import { Plus, Filter, ArrowUpRight, ArrowDownRight, Edit, Trash2 } from "lucide-react"
 import Button from "../components/ui/Button"
+import LoadingSpinner from "../components/ui/LoadingSpinner"
 import { useNavigate } from "react-router-dom"
+import { formatCurrency, safeFormatDate } from "../utils/formatDate"
 
 const TransactionsPage = () => {
   const { user } = useAuthStore()
   const { t } = useLanguageStore()
+  const { showSuccess, showError } = useNotificationStore()
   const {
     transactions,
     setTransactions,
@@ -23,37 +29,65 @@ const TransactionsPage = () => {
     getFilteredTransactions,
     deleteTransaction: removeTransaction,
   } = useTransactionStore()
+  const { categories, setCategories, getCategoryById } = useCategoryStore()
   const navigate = useNavigate()
   const [showFilters, setShowFilters] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
       if (!user) return
 
       setLoading(true)
-      const { transactions, error } = await getTransactions(user.uid)
 
-      if (!error) {
-        setTransactions(transactions)
+      try {
+        // Load categories first
+        const { categories: fetchedCategories, error: categoriesError } = await getCategories(user.uid)
+        if (!categoriesError) {
+          setCategories(fetchedCategories)
+        }
+
+        // Load transactions
+        const { transactions: fetchedTransactions, error: transactionsError } = await getTransactions(user.uid)
+        if (!transactionsError) {
+          setTransactions(fetchedTransactions)
+        } else {
+          showError(`Lỗi tải giao dịch: ${transactionsError}`)
+        }
+      } catch (error) {
+        showError("Không thể tải dữ liệu")
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
-    fetchTransactions()
-  }, [user, setLoading, setTransactions])
+    fetchData()
+  }, [user, setLoading, setTransactions, setCategories, showError])
 
   const handleDelete = async (id) => {
     if (window.confirm(t("transactions.confirmDelete"))) {
+      setIsDeleting(true)
       const { error } = await deleteTransaction(id)
 
       if (!error) {
         removeTransaction(id)
+        showSuccess(t("success.transactionDeleted"))
+      } else {
+        showError(t("errors.unexpectedError"))
       }
+      setIsDeleting(false)
     }
   }
 
   const filteredTransactions = getFilteredTransactions()
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -97,17 +131,15 @@ const TransactionsPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t("transactions.category")}</label>
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                value={filters.category || ""}
-                onChange={(e) => setFilters({ category: e.target.value })}
+                value={filters.categoryId || ""}
+                onChange={(e) => setFilters({ categoryId: e.target.value })}
               >
                 <option value="">{t("transactions.allCategories")}</option>
-                <option value="Food">Food</option>
-                <option value="Transportation">Transportation</option>
-                <option value="Housing">Housing</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Salary">Salary</option>
-                <option value="Other">Other</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -182,53 +214,97 @@ const TransactionsPage = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan="6" className="px-6 py-4 text-center">
-                    {t("common.loading")}
+                    <LoadingSpinner size="sm" />
                   </td>
                 </tr>
               ) : filteredTransactions.length > 0 ? (
-                filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(transaction.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {transaction.description}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{transaction.category}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          transaction.type === "income" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                filteredTransactions.map((transaction) => {
+                  const category = getCategoryById(transaction.categoryId)
+
+                  return (
+                    <tr key={transaction.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {safeFormatDate(transaction.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {transaction.description || "Không có mô tả"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex items-center">
+                          {category?.icon && (
+                            <span className="mr-2 text-xs">
+                              {category.icon === "coffee" && "☕"}
+                              {category.icon === "car" && "🚗"}
+                              {category.icon === "shopping-bag" && "🛍️"}
+                              {category.icon === "film" && "🎬"}
+                              {category.icon === "wallet" && "💼"}
+                              {category.icon === "gift" && "🎁"}
+                              {category.icon === "file-text" && "📄"}
+                              {category.icon === "activity" && "🏥"}
+                              {category.icon === "book" && "📚"}
+                              {category.icon === "trending-up" && "📈"}
+                              {category.icon === "plus-circle" && "➕"}
+                              {category.icon === "more-horizontal" && "➕"}
+                              {![
+                                "coffee",
+                                "car",
+                                "shopping-bag",
+                                "film",
+                                "wallet",
+                                "gift",
+                                "file-text",
+                                "activity",
+                                "book",
+                                "trending-up",
+                                "plus-circle",
+                                "more-horizontal",
+                              ].includes(category.icon) && "📝"}
+                            </span>
+                          )}
+                          {category?.name || "Không có danh mục"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            transaction.type === "income" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {transaction.type === "income" ? (
+                            <ArrowUpRight size={12} className="mr-1" />
+                          ) : (
+                            <ArrowDownRight size={12} className="mr-1" />
+                          )}
+                          {transaction.type === "income" ? t("transactions.income") : t("transactions.expense")}
+                        </span>
+                      </td>
+                      <td
+                        className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
+                          transaction.type === "income" ? "text-green-600" : "text-red-600"
                         }`}
                       >
-                        {transaction.type === "income" ? (
-                          <ArrowUpRight size={12} className="mr-1" />
-                        ) : (
-                          <ArrowDownRight size={12} className="mr-1" />
-                        )}
-                        {transaction.type === "income" ? t("transactions.income") : t("transactions.expense")}
-                      </span>
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                        transaction.type === "income" ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        className="text-primary-600 hover:text-primary-900 mr-3"
-                        onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(transaction.id)}>
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                        {transaction.type === "income" ? "+" : "-"}
+                        {formatCurrency(transaction.amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          className="text-primary-600 hover:text-primary-900 mr-3"
+                          onClick={() => navigate(`/transactions/edit/${transaction.id}`)}
+                          disabled={isDeleting}
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleDelete(transaction.id)}
+                          disabled={isDeleting}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
               ) : (
                 <tr>
                   <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
